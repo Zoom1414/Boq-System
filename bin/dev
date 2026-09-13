@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+require "rbconfig"
+
+Dir.chdir(File.expand_path("..", __dir__)) do
+  ENV["PORT"] ||= "3000"
+  abort "Tailwind build failed. Check the error above." unless system(RbConfig.ruby, "bin/rails", "tailwindcss:build")
+  begin
+    exec "foreman", "start", "-f", "Procfile.dev", *ARGV
+  rescue Errno::ENOENT
+    abort "Foreman is required. Run: gem install foreman"
+  end
+end

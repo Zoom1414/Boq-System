@@ -1,0 +1,7 @@
+<tr data-finance-target="row">
+  <td><span class="strong" data-field="label"><%= f.object.item_name %></span><small data-field="unit-label"><%= f.object.unit %></small><%= f.hidden_field :boq_item_id, data: { field: "boq-id" } %><%= f.hidden_field :item_name, data: { field: "name" } %><%= f.hidden_field :unit, data: { field: "unit" } %></td>
+  <td><%= f.number_field :quantity, min: "0.0001", step: "0.0001", required: true, aria: { label: "จำนวนรายการ" }, data: { field: "quantity" } %></td>
+  <td class="material-cell"><%= f.number_field :material_unit_price, min: 0, step: "0.01", required: true, aria: { label: "ราคาวัสดุต่อหน่วย" }, data: { field: "material" } %></td><td class="number material-cell" data-field="material-total">0.00</td>
+  <td class="labor-cell"><%= f.number_field :labor_unit_price, min: 0, step: "0.01", required: true, aria: { label: "ค่าแรงต่อหน่วย" }, data: { field: "labor" } %></td><td class="number labor-cell" data-field="labor-total">0.00</td><td class="number strong" data-field="total">0.00</td>
+  <td><button type="button" class="remove-line" aria-label="ลบรายการ" data-action="finance#remove">×</button></td>
+</tr>

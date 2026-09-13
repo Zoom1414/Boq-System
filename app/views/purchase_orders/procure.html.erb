@@ -1,0 +1,18 @@
+<%= turbo_frame_tag "boq_editor" do %><dialog class="boq-dialog procurement-dialog" data-controller="boq-editor">
+<div class="boq-dialog-heading"><div><p class="eyebrow">PROCUREMENT CONFIRMATION</p><h2>บันทึกราคาซื้อ / จ้างจริง <span class="section-code blue">PU</span></h2><p class="form-hint">อ้างอิง <%= @order.po_number %> · <%= @order.house_plan.name %></p></div><button type="button" data-action="boq-editor#close" aria-label="ปิด">×</button></div>
+<div class="boq-dialog-body">
+<% if @error %><div class="alert" role="alert"><%= @error %></div><% end %>
+<% if @order.pending_pu? %>
+<%= form_with model: @order, url: complete_purchase_order_path(@order), method: :patch, data: { turbo_frame: "_top", controller: "finance", finance_mode_value: "pu", action: "input->finance#calculate" } do |f| %>
+  <div class="finance-fields three-columns"><div><label>เลขที่ PU</label><div class="readonly-field">สร้างอัตโนมัติเมื่ออนุมัติ</div></div><div><%= f.label :procurement_date, "วันที่ซื้อ / จ้างจริง *" %><%= f.date_field :procurement_date, required: true %></div><div><label>ร้านค้า / ผู้รับจ้าง</label><div class="readonly-field"><%= @order.vendor_name %></div></div></div>
+  <div class="finance-table-wrap"><table class="finance-table line-table"><thead><tr><th>รายการ</th><th class="number">จำนวน</th><th class="number">ราคาวัสดุ PO</th><th class="number material-cell">ราคาวัสดุจริง / หน่วย</th><th class="number material-cell">รวมวัสดุจริง</th><th class="number labor-cell">รวมค่าแรง (PO)</th><th class="number">รวมทั้งสิ้น</th></tr></thead><tbody>
+  <%= f.fields_for :po_items do |row| %><tr data-finance-target="row" data-quantity="<%= row.object.quantity %>" data-labor="<%= row.object.labor_unit_price %>"><td class="strong"><%= row.object.item_name %><small><%= row.object.boq_item_id ? row.object.boq_item.code : "นอก BOQ" %></small></td><td class="number"><%= row.object.quantity.to_fs(:delimited) %> <small><%= row.object.unit || row.object.boq_item&.unit %></small></td><td class="number"><%= number_with_precision(row.object.material_unit_price, precision: 2, delimiter: ",") %></td><td class="material-cell"><%= row.number_field :actual_material_unit_price, value: row.object.actual_material_unit_price || row.object.material_unit_price, step: "0.01", min: 0, required: true, aria: { label: "ราคาวัสดุจริง #{row.object.item_name}" }, data: { field: "material" } %></td><td class="number material-cell strong" data-field="material-total"></td><td class="number labor-cell" data-field="labor-total"></td><td class="number strong" data-field="total"></td></tr><% end %>
+  </tbody></table></div>
+  <div class="finance-total-line">ยอดรวมจ่ายจริง <strong data-finance-target="total">0.00</strong> บาท</div>
+  <%= render "finance/override" %>
+  <p class="form-hint">การอนุมัตินี้หักปริมาณวัสดุและค่าแรงใน PO จาก BOQ ทันที ค่าแรงที่จ่ายผ่าน PO แล้วไม่ควรเบิกซ้ำใน DV</p>
+  <div class="boq-dialog-actions"><button type="button" class="btn btn-secondary" data-action="boq-editor#close">ยกเลิก</button><%= f.submit "ยืนยันอนุมัติจัดซื้อ / จัดจ้าง", class: "btn btn-blue", data: { turbo_submits_with: "กำลังอนุมัติ…" } %></div>
+<% end %>
+<%= render "finance/reject", url: reject_purchase_order_path(@order) %>
+<% else %><%= finance_status(@order) %><p class="form-hint">เอกสารนี้ดำเนินการแล้ว</p><%= link_to "ดูเอกสาร", purchase_order_path(@order), data: { turbo_frame: "_top" }, class: "btn btn-secondary" %><% end %>
+</div></dialog><% end %>

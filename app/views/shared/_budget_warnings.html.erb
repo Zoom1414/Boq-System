@@ -1,0 +1,5 @@
+<% warnings.each do |warning| %>
+  <div role="alert" class="my-2 rounded border border-amber-400 bg-amber-50 p-4 text-amber-950">
+    <strong><%= warning[:code] %></strong>: <%= warning[:message] %>
+  </div>
+<% end %>

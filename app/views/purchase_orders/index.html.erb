@@ -1,0 +1,2 @@
+<div class="finance-heading"><div><p class="eyebrow">PURCHASE ORDERS</p><h2>ประวัติใบสั่งซื้อ <span class="section-code">PO</span></h2><p>เอกสารทั้งหมดของแปลน <%= @nav_plan&.name || "ที่เลือก" %></p></div><% if policy(PurchaseOrder).create? %><%= link_to "+ เปิดใบสั่งซื้อ", new_purchase_order_path(workspace_params), class: "btn btn-primary" %><% end %></div>
+<div class="finance-card"><%= render "finance/document_list", documents: @orders %></div>

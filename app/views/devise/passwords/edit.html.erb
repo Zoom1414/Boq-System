@@ -1,0 +1,9 @@
+<% content_for :title, "ตั้งรหัสผ่านใหม่" %>
+<p class="eyebrow">RESET PASSWORD</p><h2 class="page-title">ตั้งรหัสผ่านใหม่</h2><p class="page-description mb-8">เลือกรหัสผ่านใหม่เพื่อเข้าใช้งานบัญชีของคุณ</p>
+<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
+  <%= render "shared/form_errors", record: resource %><%= f.hidden_field :reset_password_token %>
+  <div class="mb-5"><%= f.label :password, "รหัสผ่านใหม่" %><%= f.password_field :password, autofocus: true, autocomplete: "new-password", required: true, minlength: @minimum_password_length %><p class="form-hint">อย่างน้อย <%= @minimum_password_length %> ตัวอักษร</p></div>
+  <div class="mb-6"><%= f.label :password_confirmation, "ยืนยันรหัสผ่านใหม่" %><%= f.password_field :password_confirmation, autocomplete: "new-password", required: true %></div>
+  <%= f.submit "บันทึกรหัสผ่านใหม่", class: "btn btn-primary w-full" %>
+<% end %>
+<%= link_to "← กลับไปเข้าสู่ระบบ", new_session_path(resource_name), class: "text-link mt-6 inline-block" %>

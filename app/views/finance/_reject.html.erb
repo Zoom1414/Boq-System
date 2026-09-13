@@ -1,0 +1,1 @@
+<details class="reject-panel no-print"><summary>ปฏิเสธคำขอนี้</summary><%= form_with url: url, method: :patch, data: { turbo_frame: "_top" } do |f| %><%= f.label :admin_note, "เหตุผลที่ปฏิเสธ" %><%= f.text_area :admin_note, required: true, rows: 2 %><%= f.submit "ยืนยันปฏิเสธ", class: "btn btn-danger mt-3" %><% end %></details>

@@ -1,0 +1,14 @@
+<% content_for :title, "เข้าสู่ระบบ" %>
+<p class="eyebrow">WELCOME TO SITEWORK</p>
+<h2 class="page-title">ยินดีต้อนรับกลับ</h2>
+<p class="page-description mb-8">เข้าสู่ระบบเพื่อจัดการโครงการก่อสร้างของคุณ</p>
+<%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+  <div class="mb-5"><%= f.label :email, "อีเมล" %><%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "name@company.com", required: true %></div>
+  <div class="mb-5"><%= f.label :password, "รหัสผ่าน" %><%= f.password_field :password, autocomplete: "current-password", placeholder: "กรอกรหัสผ่าน", required: true %></div>
+  <div class="mb-7 flex flex-wrap items-center justify-between gap-3">
+    <% if devise_mapping.rememberable? %><label class="mb-0 flex items-center gap-2 text-sm font-normal"><%= f.check_box :remember_me %> จดจำการเข้าสู่ระบบ</label><% end %>
+    <%= link_to "ลืมรหัสผ่าน?", new_password_path(resource_name), class: "text-link" %>
+  </div>
+  <%= f.submit "เข้าสู่ระบบ  →", class: "btn btn-primary w-full" %>
+<% end %>
+<div class="mt-8 flex items-start gap-2 border-t border-slate-200 pt-6 text-xs leading-6 text-slate-500"><%= ui_icon(:lock, css: "mt-1 size-4 shrink-0") %><p>สำหรับบุคลากรที่ได้รับสิทธิ์เข้าใช้งาน<br>หากยังไม่มีบัญชี กรุณาติดต่อผู้ดูแลระบบ</p></div>

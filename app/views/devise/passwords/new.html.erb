@@ -1,0 +1,8 @@
+<% content_for :title, "ลืมรหัสผ่าน" %>
+<p class="eyebrow">ACCOUNT RECOVERY</p><h2 class="page-title">ลืมรหัสผ่าน?</h2><p class="page-description mb-8">กรอกอีเมลที่ใช้ลงทะเบียน เพื่อรับลิงก์ตั้งรหัสผ่านใหม่</p>
+<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
+  <%= render "shared/form_errors", record: resource %>
+  <div class="mb-6"><%= f.label :email, "อีเมล" %><%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "name@company.com", required: true %></div>
+  <%= f.submit "ส่งลิงก์ตั้งรหัสผ่านใหม่", class: "btn btn-primary w-full" %>
+<% end %>
+<%= link_to "← กลับไปเข้าสู่ระบบ", new_session_path(resource_name), class: "text-link mt-6 inline-block" %>

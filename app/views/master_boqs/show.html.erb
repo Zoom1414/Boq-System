@@ -1,0 +1,20 @@
+<section class="boq-workspace">
+  <div class="boq-toolbar">
+    <strong>Master BOQ</strong>
+    <input type="search" class="boq-search" placeholder="ค้นหารายการ, หมวด, ช่าง..." aria-label="ค้นหารายการ BOQ" data-boq-target="search" data-action="input->boq#filter">
+    <div class="boq-toolbar-actions">
+      <button class="boq-button" data-action="boq#expandAll">⌗ ภาพรวม</button>
+      <button class="boq-button" data-action="boq#collapseAll">ย่อหมวด</button>
+      <button class="boq-button" data-action="boq#toggleFullscreen">⛶ ขยาย</button>
+      <% if @master && policy(@master).update? %>
+        <%= link_to "+ เพิ่มหมวด", new_master_boq_boq_category_path(@master), class: "boq-button boq-dark", data: { turbo_frame: "boq_editor" } %>
+        <%= render "category_select" %>
+        <%= render "add_item_button" %>
+      <% end %>
+      <% if @master %><%= link_to "↧ สำรอง BOQ", backup_master_boq_path(@master), class: "boq-button boq-green", data: { turbo: false } %><% end %>
+    </div>
+  </div>
+  <%= render "summary" %>
+  <%= render "worksheet" %>
+  <div class="boq-statusbar"><span>คลิกชื่อรายการเพื่อดูหรือแก้ไข · ยอดเงินเป็นบาท</span><span>รอ PO = จำนวนที่รออนุมัติ · ยอดใช้และจ่ายหักเมื่ออนุมัติ</span></div>
+</section>

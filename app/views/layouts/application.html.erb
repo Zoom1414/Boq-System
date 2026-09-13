@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <title><%= content_for?(:title) ? "#{yield(:title)} · SITEWORK" : "SITEWORK · ระบบบริหารงานก่อสร้าง" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#152333">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body>
+    <% if devise_controller? %>
+      <div class="auth-shell">
+        <aside class="auth-story auth-grid" data-controller="login-slideshow">
+          <div class="auth-slideshow" aria-hidden="true">
+            <% ["construc.jpg", "construction-manager.png", "KR_Contruction_Banner.jpg"].each_with_index do |image, index| %>
+              <%= image_tag image, class: "auth-slide#{index.zero? ? ' is-active' : ''}", data: { login_slideshow_target: "slide" }, alt: "" %>
+            <% end %>
+          </div>
+          <div class="relative z-10 brand"><span class="brand-mark"><%= ui_icon(:building) %></span> SITEWORK <span class="text-xs font-normal text-slate-400">BOQ & LABOR</span></div>
+          <div class="relative z-10 py-16">
+            <p class="mb-6 text-xs font-semibold tracking-[0.2em] text-amber-300">BUILD WITH CONFIDENCE</p>
+            <h1 class="max-w-xl text-4xl leading-relaxed font-bold xl:text-5xl">ทุกงานก่อสร้าง<br>เริ่มจากการวางแผนที่ดี</h1>
+            <p class="mt-6 max-w-md text-base leading-8 text-slate-300">จัดการโครงการ แปลนบ้าน และงบประมาณ<br>เพื่อให้ทีมทำงานจากข้อมูลชุดเดียวกัน</p>
+            <div class="mt-10 flex flex-wrap gap-3 text-xs text-slate-300">
+              <% ["โครงการ", "แปลนบ้าน", "งบประมาณ BOQ"].each do |label| %>
+                <span class="rounded-lg border border-white/15 px-4 py-2.5"><%= label %></span>
+              <% end %>
+            </div>
+          </div>
+          <p class="relative z-10 text-xs text-slate-400">Construction BOQ & Labor Payment System</p>
+        </aside>
+        <main class="auth-content">
+          <div class="auth-card">
+            <div class="brand mb-10 lg:hidden"><span class="brand-mark"><%= ui_icon(:building) %></span> SITEWORK</div>
+            <%= render "shared/flash" %>
+            <%= yield %>
+          </div>
+        </main>
+      </div>
+    <% else %>
+      <div class="app-shell">
+        <aside class="sidebar">
+          <%= link_to root_path, class: "brand" do %><span class="brand-mark"><%= ui_icon(:building) %></span> SITEWORK<% end %>
+          <p class="mt-2 pl-[52px] text-[10px] tracking-[0.14em] text-slate-400">BOQ & LABOR MANAGEMENT</p>
+          <p class="mt-14 mb-4 px-3 text-[10px] tracking-[0.2em] text-slate-400">พื้นที่ทำงาน</p>
+          <%= link_to projects_path, class: "nav-link", aria: { current: "page" } do %><%= ui_icon(:grid) %> โครงการก่อสร้าง<% end %>
+          <%= link_to master_boq_path, class: "nav-link mt-2" do %><%= ui_icon(:wallet) %> Master BOQ<% end %>
+          <div class="mt-auto rounded-xl border border-white/10 p-4">
+            <div class="mb-2 flex items-center gap-2 text-sm text-amber-300"><%= ui_icon(:check, css: "size-4") %> วางแผนก่อนลงมือ</div>
+            <p class="text-xs leading-6 text-slate-400">จัดระเบียบโครงการและแปลนบ้าน<br>ให้พร้อมสำหรับทุกขั้นตอนของงาน</p>
+          </div>
+        </aside>
+        <header class="topbar">
+          <div class="flex items-center gap-3">
+            <%= link_to root_path, class: "brand-mark lg:hidden", aria: { label: "หน้าโครงการ" } do %><%= ui_icon(:building) %><% end %>
+            <span class="text-sm font-medium text-slate-500">ระบบบริหารงานก่อสร้าง</span>
+          </div>
+          <% if current_user %>
+            <div class="flex items-center gap-3 sm:gap-5">
+              <span class="hidden size-9 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600 sm:flex"><%= current_user.name.first %></span>
+              <div><p class="text-sm font-semibold"><%= current_user.name %></p><p class="mt-0.5 text-xs text-slate-500"><%= ApplicationHelper::ROLE_LABELS[current_user.role] %></p></div>
+              <%= button_to destroy_user_session_path, method: :delete, class: "rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900", aria: { label: "ออกจากระบบ" }, title: "ออกจากระบบ" do %><%= ui_icon(:logout) %><% end %>
+            </div>
+          <% end %>
+        </header>
+        <main id="main-content" class="page-content">
+          <%= render "shared/flash" %>
+          <%= yield %>
+          <footer class="mt-14 border-t border-slate-200 pt-5 text-xs text-slate-400">SITEWORK <span class="mx-2">/</span> Construction BOQ & Labor Payment System</footer>
+        </main>
+      </div>
+    <% end %>
+  </body>
+</html>

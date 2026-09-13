@@ -1,0 +1,26 @@
+<%= turbo_frame_tag "boq_editor" do %>
+  <dialog class="boq-dialog boq-dialog-wide" data-controller="boq-editor">
+    <div class="boq-dialog-heading"><h2><%= @item.new_record? ? "เพิ่มรายการ BOQ" : "แก้ไขรายการ BOQ" %></h2><button type="button" data-action="boq-editor#close" aria-label="ปิด">×</button></div>
+    <div class="boq-dialog-body">
+      <%= form_with model: [@master, @item] do |f| %>
+        <%= render "shared/form_errors", record: @item %>
+        <%= f.hidden_field :lock_version if @item.persisted? %>
+        <div class="form-grid">
+          <% if @item.new_record? %><div class="sm:col-span-2"><%= f.label :boq_category_id, "หมวดงาน" %><%= f.collection_select :boq_category_id, @categories, :id, :name %></div><% else %><p class="sm:col-span-2 text-sm text-slate-500"><%= @item.boq_category.name %></p><% end %>
+          <div><%= f.label :code, "Code / รหัสรายการ" %><%= f.text_field :code, required: true, placeholder: "เช่น ST-001" %></div>
+          <div><%= f.label :unit, "หน่วย" %><%= f.text_field :unit, required: true, placeholder: "เช่น ลบ.ม., ตัน, แผ่น" %></div>
+          <div class="sm:col-span-2"><%= f.label :name, "ชื่อรายการ" %><%= f.text_field :name, required: true, autofocus: true %></div>
+          <div><%= f.label :material_quantity, "ปริมาณตาม BOQ" %><%= f.number_field :material_quantity, step: "0.0001", min: 0, required: true %></div>
+          <div><%= f.label :material_unit_price, "ราคาวัสดุต่อหน่วย (บาท)" %><%= f.number_field :material_unit_price, step: "0.01", min: 0, required: true %></div>
+          <div><%= f.label :labor_unit_price, "ค่าแรงต่อหน่วย (บาท)" %><%= f.number_field :labor_unit_price, step: "0.01", min: 0, required: true %></div>
+          <div><%= f.label :progress_percentage, "ความคืบหน้า (%)" %><%= f.number_field :progress_percentage, step: "0.01", min: 0, max: 100, required: true %></div>
+          <div class="sm:col-span-2"><%= f.label :contractor_name, "ผู้รับเหมา / ช่าง" %><%= f.text_field :contractor_name %></div>
+          <div class="sm:col-span-2"><%= f.label :note, "หมายเหตุ" %><%= f.text_area :note, rows: 2 %></div>
+        </div>
+        <p class="form-hint mt-5">รวมวัสดุและค่าแรงคำนวณจากปริมาณ × ราคาต่อหน่วย ยอดใช้วัสดุและค่าแรงที่จ่ายจะอัปเดตเมื่อเอกสารได้รับอนุมัติ</p>
+        <div class="boq-dialog-actions"><button type="button" class="boq-button" data-action="boq-editor#close">ยกเลิก</button><%= f.submit "บันทึกรายการ", class: "boq-button boq-blue" %></div>
+      <% end %>
+      <% if @item.persisted? %><%= button_to "ลบรายการ", master_boq_boq_item_path(@master, @item), method: :delete, class: "boq-delete", form: { data: { turbo_confirm: "ลบรายการนี้? รายการที่มีเอกสารอ้างอิงจะไม่สามารถลบได้" } } %><% end %>
+    </div>
+  </dialog>
+<% end %>

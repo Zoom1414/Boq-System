@@ -1,0 +1,6 @@
+<% if record.errors.any? %>
+  <div class="alert" role="alert">
+    <p class="font-semibold">กรุณาตรวจสอบข้อมูลอีกครั้ง</p>
+    <ul class="mt-2 list-inside list-disc space-y-1"><% record.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+  </div>
+<% end %>

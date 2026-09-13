@@ -1,0 +1,4 @@
+<div id="boq-summary" class="boq-summary">
+  <div class="flex items-center gap-3"><span class="text-slate-400">ไปที่</span><span class="boq-plan-chip"><%= @house_plan&.name || "ยังไม่ได้เลือกแปลน" %><span><%= @categories.sum { |c| c.boq_items.size } %></span></span></div>
+  <div class="boq-budget-summary"><span>วัสดุ <b><%= baht(@master&.total_material_budget) %></b></span><span>ค่าแรง <b><%= baht(@master&.total_labor_budget) %></b></span></div>
+</div>

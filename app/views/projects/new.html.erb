@@ -1,0 +1,4 @@
+<% content_for :title, "เพิ่มโครงการ" %>
+<%= link_to "← โครงการทั้งหมด", projects_path, class: "text-link mb-6 inline-block" %>
+<div class="page-heading"><div><p class="eyebrow">NEW PROJECT</p><h1 class="page-title">เพิ่มโครงการใหม่</h1><p class="page-description">กรอกข้อมูลพื้นฐาน เพื่อเริ่มจัดการโครงการก่อสร้าง</p></div></div>
+<%= render "form", project: @project %>

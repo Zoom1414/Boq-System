@@ -1,0 +1,32 @@
+<div class="finance-heading"><div><p class="eyebrow">PURCHASE ORDER / 01</p><h2>เปิดใบสั่งซื้อ / สั่งจ้าง <span class="section-code">PO</span></h2><p>เลือกรายการ กำหนดราคา แล้วส่งต่อให้ฝ่ายจัดซื้อ</p></div><%= link_to "ประวัติใบสั่งซื้อ ↗", purchase_orders_path(workspace_params), class: "btn btn-secondary" %></div>
+<div id="budget_warnings"></div><div id="finance-form">
+<% if @nav_plan %>
+<%= form_with model: @order, data: { controller: "finance", finance_mode_value: "po", action: "input->finance#calculate" }, class: "finance-card" do |f| %>
+  <%= render "shared/form_errors", record: @order %>
+  <%= f.hidden_field :project_id, value: @order.project_id || @nav_project.id %><%= f.hidden_field :house_plan_id, value: @order.house_plan_id || @nav_plan.id %>
+  <div class="finance-card-heading"><span class="step-dot">01</span><div><h3>ข้อมูลใบสั่งซื้อ</h3><p><%= @nav_project.name %> / <%= @nav_plan.name %></p></div><span class="status-pill status-draft">เอกสารใหม่</span></div>
+  <div class="finance-fields three-columns">
+    <div><label>เลขที่ PO</label><div class="readonly-field">สร้างเลขอัตโนมัติเมื่อบันทึก</div></div>
+    <div><%= f.label :order_date, "วันที่สั่งซื้อ / จ้าง *" %><%= f.date_field :order_date, required: true %></div>
+    <div><%= f.label :vendor_name, "ร้านค้า / ผู้รับจ้าง *" %><%= f.text_field :vendor_name, required: true, placeholder: "ระบุชื่อร้านค้าหรือผู้รับจ้าง" %></div>
+  </div>
+  <div class="finance-section">
+    <div class="section-heading"><span class="step-dot">02</span><h3>รายการที่ต้องการสั่งซื้อ</h3></div>
+    <div class="segmented-control"><button type="button" class="is-active" data-finance-target="boqTab" data-action="finance#useBoq">เลือกจาก BOQ</button><button type="button" data-finance-target="outsideTab" data-action="finance#useOutside">รายการนอก BOQ</button></div>
+    <div class="item-composer">
+      <div data-finance-target="boqFields"><label for="po-picker">เลือกรายการจาก BOQ</label><%= select_tag "", options_for_select(item_picker_options(@items)), include_blank: "เลือกรายการ…", id: "po-picker", data: { finance_target: "picker", action: "change->finance#selectItem" } %></div>
+      <div data-finance-target="outsideFields" hidden><label for="po-name">ชื่อรายการนอก BOQ</label><input id="po-name" data-finance-target="name" placeholder="ชื่อรายการ / งานเพิ่มเติม"><label for="po-unit" class="mt-2">หน่วย</label><input id="po-unit" data-finance-target="unit" placeholder="เช่น ชุด, งาน"></div>
+      <div><label for="po-quantity">จำนวน</label><input id="po-quantity" type="number" min="0.0001" step="0.0001" value="1" data-finance-target="quantity"></div>
+      <div><label for="po-material">ค่าวัสดุ / หน่วย</label><input id="po-material" type="number" min="0" step="0.01" value="0" data-finance-target="material"></div>
+      <div><label for="po-labor">ค่าแรง / หน่วย</label><input id="po-labor" type="number" min="0" step="0.01" value="0" data-finance-target="labor"></div>
+      <button type="button" class="btn btn-primary composer-add" data-action="finance#add">+ เพิ่ม</button>
+      <p class="composer-hint" data-finance-target="hint">เลือก BOQ เพื่อดึงราคาต่อหน่วยและตรวจยอดคงเหลือ</p>
+      <p class="composer-error" data-finance-target="error" role="alert" hidden></p>
+    </div>
+    <div class="finance-table-wrap"><table class="finance-table line-table"><thead><tr><th>รายการ</th><th class="number">จำนวน</th><th class="number material-cell">วัสดุ / หน่วย</th><th class="number material-cell">รวมวัสดุ</th><th class="number labor-cell">ค่าแรง / หน่วย</th><th class="number labor-cell">รวมค่าแรง</th><th class="number">รวมทั้งสิ้น</th><th></th></tr></thead><tbody data-finance-target="rows"><%= f.fields_for :po_items do |row| %><%= render "item_fields", f: row %><% end %></tbody></table><div data-finance-target="empty"><%= render "finance/empty", title: "เริ่มจากรายการแรกของคุณ", description: "เลือกรายการจาก BOQ หรือเพิ่มรายการนอก BOQ ด้านบน" %></div></div>
+    <template data-finance-target="template"><%= f.fields_for :po_items, PoItem.new, child_index: "NEW_ROW" do |row| %><%= render "item_fields", f: row %><% end %></template>
+  </div>
+  <div class="finance-footer"><div><span class="eyebrow">ยอดรวมใบสั่งซื้อ</span><strong class="grand-total" data-finance-target="total">0.00</strong><span>บาท</span></div><%= f.submit "บันทึกและส่งจัดซื้อ →", class: "btn btn-dark", data: { turbo_submits_with: "กำลังบันทึก…" } %></div>
+<% end %>
+<% else %><%= render "finance/empty", title: "สร้างโครงการและแปลนบ้านก่อน", description: "เลือกโครงการและแปลนบ้านเพื่อเริ่มเปิดใบสั่งซื้อ" %><%= link_to "จัดการโครงการ", projects_path, class: "btn btn-primary mt-4" %><% end %>
+</div>

@@ -1,0 +1,4 @@
+<% content_for :title, "เพิ่มแปลนบ้าน" %>
+<%= link_to "← แปลนบ้านในโครงการ", project_house_plans_path(@project), class: "text-link mb-6 inline-block" %>
+<div class="page-heading"><div><p class="eyebrow">NEW HOUSE PLAN</p><h1 class="page-title">เพิ่มแปลนบ้าน</h1><p class="page-description">จัดเตรียมข้อมูลแบบบ้านสำหรับโครงการของคุณ</p></div></div>
+<%= render "form", project: @project, house_plan: @house_plan %>

@@ -1,0 +1,4 @@
+<select id="boq-category-select" class="boq-category-select" aria-label="ไปที่หมวดงาน" data-action="change->boq#jump">
+  <option value="">-- เลือกหมวดงาน --</option>
+  <% @categories.each do |category| %><option value="boq-category-<%= category.id %>"><%= category.name %></option><% end %>
+</select>

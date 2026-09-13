@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <title><%= @page_title || (content_for?(:title) ? yield(:title) : "Master BOQ") %> · SITEWORK</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#152333">
+  <%= csrf_meta_tags %><%= csp_meta_tag %>
+  <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+  <%= javascript_importmap_tags %>
+</head>
+<body>
+<div class="boq-shell workspace-shell" data-controller="boq">
+  <aside class="boq-sidebar">
+    <%= link_to dashboard_path(workspace_params), class: "boq-brand brand" do %><span class="brand-mark"><%= ui_icon(:building) %></span><span class="sidebar-content">SITEWORK<small>CONSTRUCTION MANAGEMENT</small></span><% end %>
+    <button class="boq-collapse" data-action="boq#toggleSidebar" aria-label="ยุบหรือขยายเมนู">« <span class="sidebar-content">ยุบเมนู</span></button>
+    <div class="sidebar-content">
+      <section class="boq-sidebar-section workspace-context">
+        <label for="boq_project_id">โครงการที่กำลังทำงาน</label>
+        <%= form_with url: dashboard_path, method: :get do |f| %>
+          <%= f.select :project_id, @nav_projects.map { |p| [p.name, p.id] }, { selected: @nav_project&.id, include_blank: @nav_project.nil? ? "เลือกโครงการ" : false }, id: "boq_project_id", data: { action: "change->boq#navigate" } %>
+        <% end %>
+        <%= form_with url: dashboard_path, method: :get, class: "mt-3" do |f| %>
+          <%= f.hidden_field :project_id, value: @nav_project&.id %>
+          <%= f.label :house_plan_id, "แปลนบ้าน", for: "boq_house_plan_id" %>
+          <%= f.select :house_plan_id, @nav_plans.map { |p| [p.name, p.id] }, { selected: @nav_plan&.id, include_blank: @nav_plan.nil? ? "ยังไม่มีแปลนบ้าน" : false }, id: "boq_house_plan_id", data: { action: "change->boq#navigate" } %>
+        <% end %>
+      </section>
+      <nav class="workspace-nav" aria-label="เมนูหลัก">
+        <p>พื้นที่ทำงาน</p>
+        <%= workspace_nav "ภาพรวม", dashboard_path(workspace_params), controller_name == "dashboard" %>
+        <%= workspace_nav "Master BOQ", master_boq_path(workspace_params), controller_name == "master_boqs", :wallet %>
+        <%= workspace_nav "โครงการและแปลนบ้าน", projects_path, %w[projects house_plans].include?(controller_name), :building %>
+        <p>จัดซื้อ / จัดจ้าง</p>
+        <% if policy(PurchaseOrder).create? %><%= workspace_nav "เปิดใบสั่งซื้อ (PO)", new_purchase_order_path(workspace_params), controller_name == "purchase_orders" && %w[new create].include?(action_name), :plus %><% end %>
+        <%= workspace_nav "ประวัติใบสั่งซื้อ", purchase_orders_path(workspace_params), controller_name == "purchase_orders" && action_name == "index" %>
+        <%= workspace_nav "รอจัดซื้อ (PU)", pending_purchase_orders_path(workspace_params), controller_name == "purchase_orders" && %w[pending procure complete].include?(action_name), :wallet %>
+        <%= workspace_nav "ประวัติการจัดซื้อ", history_purchase_orders_path(workspace_params), controller_name == "purchase_orders" && action_name == "history" %>
+        <p>ค่าแรง / อนุมัติ</p>
+        <% if current_user.project_engineer? %><%= workspace_nav "เบิกจ่ายค่าแรง (DV)", new_labor_draw_request_path(workspace_params), controller_name == "labor_draw_requests" && %w[new create].include?(action_name), :plus %><% end %>
+        <%= workspace_nav "ประวัติเบิกค่าแรง", labor_draw_requests_path(workspace_params), controller_name == "labor_draw_requests" && action_name == "index", :wallet %>
+        <%= workspace_nav "คำขอรออนุมัติ", approvals_path(workspace_params), controller_name == "approvals", :check %>
+      </nav>
+    </div>
+    <div class="workspace-user sidebar-content"><span class="boq-avatar"><%= current_user.name.first %></span><div><strong><%= current_user.name %></strong><small><%= ApplicationHelper::ROLE_LABELS[current_user.role] %></small></div><%= button_to destroy_user_session_path, method: :delete, aria: { label: "ออกจากระบบ" } do %><%= ui_icon(:logout, css: "size-4") %><% end %></div>
+  </aside>
+  <header class="boq-header">
+    <div class="flex items-center gap-3"><button class="boq-button boq-mobile-menu" data-action="boq#toggleSidebar" aria-label="เปิดเมนู">☰</button><div><p class="workspace-breadcrumb">WORKSPACE <span>/</span> <%= @nav_project&.code || "เริ่มต้นโครงการ" %></p><h1><%= @page_title || (controller_name == "master_boqs" ? "บัญชีปริมาณงาน (Master BOQ)" : "จัดการโครงการและแปลนบ้าน") %></h1></div></div>
+    <div class="boq-header-actions"><span class="workspace-plan"><%= ui_icon(:home, css: "size-4") %><%= @nav_plan&.name || "ยังไม่ได้เลือกแปลน" %></span>
+    <% if controller_name == "master_boqs" && @master %>
+      <% if policy(@master).import? %><button class="boq-button" data-action="boq#openImport">↥ Import</button><% end %>
+      <%= link_to "↧ Export CSV", export_master_boq_path(@master), class: "boq-button", data: { turbo: false } %>
+    <% end %></div>
+  </header>
+  <main class="boq-main <%= 'workspace-page' unless controller_name == 'master_boqs' %>" id="main-content">
+    <div id="boq-notice"><%= render "shared/flash" %></div>
+    <%= yield %>
+  </main>
+  <%= turbo_frame_tag "boq_editor" %>
+  <% if controller_name == "master_boqs" && @master && policy(@master).import? %>
+    <dialog class="boq-dialog" data-boq-target="importDialog">
+      <div class="boq-dialog-heading"><h2>นำเข้ารายการ BOQ</h2><button type="button" data-action="boq#closeImport" aria-label="ปิด">×</button></div>
+      <%= form_with url: import_master_boq_path(@master), multipart: true, data: { turbo: false }, class: "boq-dialog-body" do |f| %>
+        <p class="form-hint mb-5">ไฟล์ CSV UTF-8 ไม่เกิน 500 รายการ / 2 MB ใช้หัวคอลัมน์จาก Export ระบบเพิ่มรายการใหม่ หากรหัสซ้ำจะยกเลิกทั้งไฟล์</p>
+        <%= f.label :file, "ไฟล์ CSV" %><%= f.file_field :file, accept: ".csv,text/csv", required: true %>
+        <div class="boq-dialog-actions"><button type="button" class="boq-button" data-action="boq#closeImport">ยกเลิก</button><%= f.submit "นำเข้ารายการ", class: "boq-button boq-blue" %></div>
+      <% end %>
+    </dialog>
+  <% end %>
+</div>
+</body>
+</html>

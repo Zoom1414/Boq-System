@@ -1,0 +1,9 @@
+<%= form_with model: [project, house_plan], class: "form-panel" do |form| %>
+  <%= render "shared/form_errors", record: house_plan %>
+  <div class="mb-7 flex items-center gap-3 rounded-xl bg-slate-50 p-4"><span class="text-slate-400"><%= ui_icon(:building) %></span><div><p class="text-xs text-slate-400">โครงการ</p><p class="mt-1 text-sm font-medium"><%= project.name %></p></div></div>
+  <div class="form-grid">
+    <div><%= form.label :name, "ชื่อแปลนบ้าน *" %><%= form.text_field :name, required: true, placeholder: "เช่น บ้านเดี่ยว Type A", autofocus: true %></div>
+    <div><%= form.label :plan_code, "รหัสแปลนบ้าน *" %><%= form.text_field :plan_code, required: true, placeholder: "เช่น TYPE-A" %><p class="form-hint">ใช้รหัสที่ไม่ซ้ำภายในโครงการนี้</p></div>
+  </div>
+  <div class="form-actions"><%= form.submit house_plan.new_record? ? "เพิ่มแปลนบ้าน" : "บันทึกการแก้ไข", class: "btn btn-primary" %><%= link_to "ยกเลิก", project_house_plans_path(project), class: "btn btn-secondary" %></div>
+<% end %>

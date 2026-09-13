@@ -1,0 +1,14 @@
+<%= turbo_frame_tag "boq_editor" do %>
+  <dialog class="boq-dialog" data-controller="boq-editor">
+    <div class="boq-dialog-heading"><h2><%= @category.new_record? ? "เพิ่มหมวดงาน" : "แก้ไขหมวดงาน" %></h2><button type="button" data-action="boq-editor#close" aria-label="ปิด">×</button></div>
+    <div class="boq-dialog-body">
+      <%= form_with model: [@master, @category] do |f| %>
+        <%= render "shared/form_errors", record: @category %>
+        <div class="mb-5"><%= f.label :name, "ชื่อหมวดงาน" %><%= f.text_field :name, required: true, autofocus: true, placeholder: "เช่น 1.1 งานดิน หิน ทราย และฐานราก" %></div>
+        <div><%= f.label :position, "ลำดับหมวด" %><%= f.number_field :position, min: 0, required: true %></div>
+        <div class="boq-dialog-actions"><button type="button" class="boq-button" data-action="boq-editor#close">ยกเลิก</button><%= f.submit "บันทึกหมวดงาน", class: "boq-button boq-blue" %></div>
+      <% end %>
+      <% if @category.persisted? %><%= button_to "ลบหมวดงาน", master_boq_boq_category_path(@master, @category), method: :delete, class: "boq-delete", form: { data: { turbo_confirm: "ลบหมวดงานนี้? หมวดที่มีรายการอยู่จะไม่สามารถลบได้" } } %><% end %>
+    </div>
+  </dialog>
+<% end %>

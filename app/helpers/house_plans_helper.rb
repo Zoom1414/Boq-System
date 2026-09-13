@@ -1,0 +1,2 @@
+module HousePlansHelper
+end

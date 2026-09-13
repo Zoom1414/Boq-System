@@ -1,0 +1,4 @@
+<% content_for :title, "แก้ไขโครงการ" %>
+<%= link_to "← รายละเอียดโครงการ", @project, class: "text-link mb-6 inline-block" %>
+<div class="page-heading"><div><p class="eyebrow"><%= @project.code %></p><h1 class="page-title">แก้ไขโครงการ</h1><p class="page-description">ปรับปรุงข้อมูลของ <%= @project.name %></p></div></div>
+<%= render "form", project: @project %>

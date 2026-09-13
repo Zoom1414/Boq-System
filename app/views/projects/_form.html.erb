@@ -1,0 +1,12 @@
+<%= form_with model: project, class: "form-panel" do |form| %>
+  <%= render "shared/form_errors", record: project %>
+  <h2 class="mb-6 text-lg font-bold">ข้อมูลโครงการ</h2>
+  <div class="form-grid">
+    <div class="sm:col-span-2"><%= form.label :name, "ชื่อโครงการ *" %><%= form.text_field :name, required: true, placeholder: "เช่น บ้านสวน รามอินทรา", autofocus: true %></div>
+    <div><%= form.label :code, "รหัสโครงการ *" %><%= form.text_field :code, required: true, placeholder: "เช่น PRJ-001" %><p class="form-hint">ใช้รหัสที่ไม่ซ้ำกับโครงการอื่น</p></div>
+    <div><%= form.label :status, "สถานะโครงการ" %><%= form.select :status, ApplicationHelper::PROJECT_STATUS_LABELS.map { |value, label| [label, value] } %></div>
+    <div class="sm:col-span-2"><%= form.label :location, "สถานที่ก่อสร้าง" %><%= form.text_field :location, placeholder: "ที่อยู่ เขต/อำเภอ และจังหวัด" %></div>
+    <div class="sm:col-span-2"><%= form.label :description, "รายละเอียดโครงการ" %><%= form.text_area :description, rows: 4, placeholder: "รายละเอียด ขอบเขตงาน หรือข้อมูลเพิ่มเติม" %></div>
+  </div>
+  <div class="form-actions"><%= form.submit project.new_record? ? "สร้างโครงการ" : "บันทึกการแก้ไข", class: "btn btn-primary" %><%= link_to "ยกเลิก", projects_path, class: "btn btn-secondary" %></div>
+<% end %>

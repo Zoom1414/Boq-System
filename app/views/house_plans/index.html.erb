@@ -1,0 +1,29 @@
+<% content_for :title, "แปลนบ้าน · #{@project.name}" %>
+<%= link_to "← #{@project.name}", @project, class: "text-link mb-6 inline-block" %>
+<div class="page-heading">
+  <div><p class="eyebrow">HOUSE PLANS / <%= @project.code %></p><h1 class="page-title">แปลนบ้านในโครงการ</h1><p class="page-description"><%= @project.name %> <span class="mx-2 text-slate-300">/</span> <%= @house_plans.size %> แปลน</p></div>
+  <% if policy(HousePlan).create? %><%= link_to new_project_house_plan_path(@project), class: "btn btn-primary" do %><%= ui_icon(:plus) %> เพิ่มแปลนบ้าน<% end %><% end %>
+</div>
+<% if @house_plans.empty? %>
+  <div class="empty-state"><span class="icon-box mx-auto mb-5"><%= ui_icon(:home) %></span><h2 class="text-lg font-semibold">ยังไม่มีแปลนบ้าน</h2><p class="mt-3 text-sm text-slate-500">เพิ่มแบบบ้านแรกสำหรับโครงการนี้</p>
+    <% if policy(HousePlan).create? %><%= link_to "เพิ่มแปลนบ้าน", new_project_house_plan_path(@project), class: "btn btn-primary mt-6" %><% end %>
+  </div>
+<% else %>
+  <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+    <% @house_plans.each do |plan| %>
+      <article class="project-card p-6">
+        <div class="mb-5 flex items-center justify-between"><span class="icon-box bg-amber-50 text-amber-700"><%= ui_icon(:home) %></span><span class="badge badge-archived"><%= plan.plan_code %></span></div>
+        <h2 class="text-lg font-bold"><%= plan.name %></h2>
+        <p class="mt-3 text-xs text-slate-400">งบประมาณ BOQ รวม</p>
+        <p class="mt-2 text-xl font-bold"><%= baht(plan.master_boq ? plan.master_boq.total_material_budget + plan.master_boq.total_labor_budget : 0) %></p>
+        <p class="mt-3 text-sm text-slate-500"><%= plan.master_boq ? "มีข้อมูล Master BOQ" : "ยังไม่มีข้อมูล Master BOQ" %></p>
+        <%= link_to "เปิด Master BOQ →", master_boq_path(project_id: @project.id, house_plan_id: plan.id), class: "btn btn-primary mt-5" %>
+        <% if policy(plan).update? %>
+          <div class="form-actions"><%= link_to "แก้ไขแปลน", edit_project_house_plan_path(@project, plan), class: "btn btn-secondary" %>
+            <%= button_to "ลบ", project_house_plan_path(@project, plan), method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "ต้องการลบแปลนนี้หรือไม่?" } } %>
+          </div>
+        <% end %>
+      </article>
+    <% end %>
+  </div>
+<% end %>
