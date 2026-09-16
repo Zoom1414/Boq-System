@@ -70,6 +70,15 @@ restoring JSON is not implemented. Each successful form submission saves immedia
 All authenticated pages share the SITEWORK workspace, project/plan selectors, and
 navigation. Login and project/plan management use the same navy and amber theme.
 Tables scroll horizontally on small screens; document details have a print layout.
+Sidebar links navigate the `workspace_content` Turbo Frame with history enabled,
+keeping the sidebar in place. Stimulus synchronizes the active menu and page title
+after frame navigation and restores sidebar scroll on full visits.
+
+The overview includes a work-progress donut and category bars. Values come from
+each BOQ item's `progress_percentage`, weighted by its material plus labor budget;
+zero-budget groups use a simple average. Empty BOQs show 0% and an empty chart.
+These charts represent recorded work completion, independently of payments. Edit
+an item's progress in Master BOQ to update the charts on the next overview visit.
 
 | Page | Path | Workflow |
 | --- | --- | --- |
@@ -78,19 +87,26 @@ Tables scroll horizontally on small screens; document details have a print layou
 | PO history | `/purchase_orders` | Status, supplier, amount, document detail and printing |
 | Pending PU | `/purchase_orders/pending` | Admin opens a Turbo Frame dialog to enter actual prices |
 | PU history | `/purchase_orders/history` | Approved receipts, PU/PO references, actual dates and totals |
-| Labor draw | `/labor_draw_requests/new` | Engineer selects contractor; assigned BOQ rows load in a Turbo Frame |
+| Labor draw | `/labor_draw_requests/new` | Admin or Engineer selects contractor; assigned BOQ rows load in a Turbo Frame |
 | DV history | `/labor_draw_requests` | Approved monthly totals with expandable documents and all-request history |
 | Approvals | `/approvals` | Pending, approved, rejected, and all PO/DV documents |
 
-PO creation is available to Admin and Project Engineer. Only Project Engineer can
-create DV requests; the requester is taken from the signed-in account. Admin alone
-can approve or reject. Other authenticated roles can view document history.
+PO and DV creation is available to Admin and Project Engineer. The requester is
+always the signed-in account. Engineer DV requests remain pending; Admin DV
+submissions immediately approve and deduct BOQ balances in one transaction through
+`SubmitLaborDrawService`. Only Admin can approve or reject other requests.
 
-PO and DV submissions enter a pending state and return Turbo Stream budget warnings
-for overruns. Neither submission deducts BOQ balances. Approval rechecks current
-balances under locks; over-budget approval requires an explicit Admin checkbox and
-reason. Rejection requires a note and never changes balances.
+The labor form shows available balances, optional budget details, a fill-remaining
+shortcut, live totals, and a sticky submit button. Switching contractors preserves
+entered amounts during the current page visit. A unique submission key makes
+retries of the same form idempotent. No draft is saved until submission.
 
+PO and Engineer DV submissions return Turbo Stream budget warnings for overruns
+without deducting balances. Every approval rechecks current balances under locks.
+Over-budget approval requires an explicit Admin checkbox and reason, including
+immediate Admin draws. Failed immediate approval rolls back the whole submission.
+Rejection requires a note and never changes balances. Approval supports an optional
+Admin note stored atomically with the audit and balance changes.
 PO, PU, and DV numbers use monthly counters protected by database row locks. PU
 completion saves actual prices, the receipt date/number, approval audit, and BOQ
 deductions in one transaction. Retrying approval never deducts twice. Actual purchase
@@ -148,7 +164,7 @@ not enter the same payment in both documents.
 | Role | Existing projects/plans | DV creation | Approval / override |
 | --- | --- | --- | --- |
 | Dev | Read/write | No | No |
-| Admin | Read/write | No | Yes |
+| Admin | Read/write | Immediate approval | Yes |
 | Project Engineer | Read/write | Own requests | No |
 | User | Read | No | No |
 

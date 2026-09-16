@@ -1,5 +1,14 @@
 class ApproveLaborDrawService < ApproveDocumentService
+  def initialize(document, admin_note: nil, **options)
+    super(document, **options)
+    @admin_note = admin_note
+  end
+
   private
+
+  def approval_attributes
+    @admin_note.nil? ? {} : { admin_note: @admin_note }
+  end
 
   def pending_status
     "pending"

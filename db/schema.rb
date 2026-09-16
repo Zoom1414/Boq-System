@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_12_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_13_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -98,6 +98,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_000000) do
     t.bigint "project_id", null: false
     t.date "request_date", null: false
     t.string "status", default: "pending", null: false
+    t.string "submission_key"
     t.decimal "total_requested_amount", precision: 18, scale: 2, default: "0.0", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
@@ -106,6 +107,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_000000) do
     t.index ["house_plan_id"], name: "index_labor_draw_requests_on_house_plan_id"
     t.index ["project_id"], name: "index_labor_draw_requests_on_project_id"
     t.index ["status", "request_date"], name: "index_labor_draw_requests_on_status_and_request_date"
+    t.index ["submission_key"], name: "index_labor_draw_requests_on_submission_key", unique: true
     t.index ["user_id"], name: "index_labor_draw_requests_on_user_id"
     t.check_constraint "status::text <> 'approved'::text OR approved_by_id IS NOT NULL AND approved_at IS NOT NULL", name: "labor_draw_requests_approval_audit"
     t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying]::text[])", name: "labor_draw_requests_valid_status"

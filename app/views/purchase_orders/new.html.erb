@@ -19,14 +19,14 @@
       <div><label for="po-quantity">จำนวน</label><input id="po-quantity" type="number" min="0.0001" step="0.0001" value="1" data-finance-target="quantity"></div>
       <div><label for="po-material">ค่าวัสดุ / หน่วย</label><input id="po-material" type="number" min="0" step="0.01" value="0" data-finance-target="material"></div>
       <div><label for="po-labor">ค่าแรง / หน่วย</label><input id="po-labor" type="number" min="0" step="0.01" value="0" data-finance-target="labor"></div>
-      <button type="button" class="btn btn-primary composer-add" data-action="finance#add">+ เพิ่ม</button>
+      <button type="button" class="btn btn-primary composer-add" data-action="finance#add">เพิ่มในใบสั่งซื้อ</button>
       <p class="composer-hint" data-finance-target="hint">เลือก BOQ เพื่อดึงราคาต่อหน่วยและตรวจยอดคงเหลือ</p>
       <p class="composer-error" data-finance-target="error" role="alert" hidden></p>
     </div>
     <div class="finance-table-wrap"><table class="finance-table line-table"><thead><tr><th>รายการ</th><th class="number">จำนวน</th><th class="number material-cell">วัสดุ / หน่วย</th><th class="number material-cell">รวมวัสดุ</th><th class="number labor-cell">ค่าแรง / หน่วย</th><th class="number labor-cell">รวมค่าแรง</th><th class="number">รวมทั้งสิ้น</th><th></th></tr></thead><tbody data-finance-target="rows"><%= f.fields_for :po_items do |row| %><%= render "item_fields", f: row %><% end %></tbody></table><div data-finance-target="empty"><%= render "finance/empty", title: "เริ่มจากรายการแรกของคุณ", description: "เลือกรายการจาก BOQ หรือเพิ่มรายการนอก BOQ ด้านบน" %></div></div>
     <template data-finance-target="template"><%= f.fields_for :po_items, PoItem.new, child_index: "NEW_ROW" do |row| %><%= render "item_fields", f: row %><% end %></template>
   </div>
-  <div class="finance-footer"><div><span class="eyebrow">ยอดรวมใบสั่งซื้อ</span><strong class="grand-total" data-finance-target="total">0.00</strong><span>บาท</span></div><%= f.submit "บันทึกและส่งจัดซื้อ →", class: "btn btn-dark", data: { turbo_submits_with: "กำลังบันทึก…" } %></div>
+  <div class="finance-footer purchase-submit-bar"><div><span class="eyebrow">ยอดรวมใบสั่งซื้อ</span><strong class="grand-total" data-finance-target="total">0.00</strong><span>บาท</span></div><%= f.submit "บันทึกและส่งจัดซื้อ →", class: "btn btn-dark", data: { turbo_submits_with: "กำลังบันทึก…" } %></div>
 <% end %>
 <% else %><%= render "finance/empty", title: "สร้างโครงการและแปลนบ้านก่อน", description: "เลือกโครงการและแปลนบ้านเพื่อเริ่มเปิดใบสั่งซื้อ" %><%= link_to "จัดการโครงการ", projects_path, class: "btn btn-primary mt-4" %><% end %>
 </div>

@@ -1,1 +1,11 @@
-<div class="finance-success"><span class="success-mark"><%= ui_icon(:check) %></span><p class="eyebrow">REQUEST SUBMITTED</p><h2>บันทึก <%= document_number(document) %> แล้ว</h2><p>คำขออยู่ระหว่างรออนุมัติ ยอดงบประมาณยังไม่ถูกหัก</p><div class="flex flex-wrap justify-center gap-3 mt-6"><%= link_to "ดูรายละเอียดเอกสาร", polymorphic_path(document), data: { turbo_frame: "_top" }, class: "btn btn-primary" %><%= link_to "กลับภาพรวม", dashboard_path(workspace_params), data: { turbo_frame: "_top" }, class: "btn btn-secondary" %></div></div>
+<div class="finance-success" role="status">
+  <span class="success-mark"><%= ui_icon(:check) %></span>
+  <h2><%= document.approved? ? "บันทึกเบิกค่าแรงเรียบร้อย" : "ส่งคำขอเรียบร้อย" %></h2>
+  <p><strong><%= document_number(document) %></strong> · <%= document_vendor(document) %> · <%= baht(document_amount(document)) %></p>
+  <p><%= document.approved? ? "อนุมัติและหักยอด BOQ แล้ว ไม่ต้องดำเนินการอนุมัติอีก" : "Admin จะตรวจสอบคำขอนี้ ยอดงบประมาณยังไม่ถูกหัก" %></p>
+  <div class="flex flex-wrap justify-center gap-3 mt-6">
+    <% if document.is_a?(LaborDrawRequest) %><%= link_to "เบิกครั้งใหม่", new_labor_draw_request_path(workspace_params.merge(contractor_name: document.contractor_name)), data: { turbo_frame: "workspace_content" }, class: "btn btn-purple" %><% end %>
+    <%= link_to "ดูรายละเอียดเอกสาร", polymorphic_path(document), data: { turbo_frame: "_top" }, class: "btn btn-secondary" %>
+    <%= link_to "กลับหน้าประวัติ", document.is_a?(PurchaseOrder) ? purchase_orders_path(workspace_params) : labor_draw_requests_path(workspace_params), data: { turbo_frame: "workspace_content" }, class: "btn btn-secondary" %>
+  </div>
+</div>

@@ -9,7 +9,8 @@ class LaborDrawRequest < ApplicationRecord
 
   validates :dv_number, :contractor_name, :request_date, presence: true
   validates :dv_number, uniqueness: true
-  validate :requester_is_engineer
+  validate :requester_can_draw
+  validates :submission_key, format: { with: /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/ }, allow_nil: true
   before_validation :calculate_total
 
   def line_items
@@ -27,7 +28,9 @@ class LaborDrawRequest < ApplicationRecord
     self.total_requested_amount = labor_draw_items.reject(&:marked_for_destruction?).sum { |item| item.requested_amount.to_d }
   end
 
-  def requester_is_engineer
-    errors.add(:user, "must be a Project Engineer") if user && !user.project_engineer? && (new_record? || will_save_change_to_user_id?)
+  def requester_can_draw
+    if user && !user.project_engineer? && !user.admin? && (new_record? || will_save_change_to_user_id?)
+      errors.add(:user, "must be a Project Engineer or Admin")
+    end
   end
 end

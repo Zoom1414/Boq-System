@@ -7,7 +7,7 @@ class LaborDrawRequestPolicy
   end
 
   def create?
-    user&.project_engineer? && record.user_id == user.id
+    (user&.project_engineer? || user&.admin?) && record.user_id == user.id
   end
 
   def approve?

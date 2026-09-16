@@ -4,6 +4,7 @@
 @source "../../javascript";
 @import "./boq.css";
 @import "./workspace.css";
+@import "./usability.css";
 
 @theme {
   --font-sans: "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;

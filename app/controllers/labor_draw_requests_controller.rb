@@ -9,8 +9,8 @@ class LaborDrawRequestsController < FinanceController
   end
 
   def new
-    @draw = LaborDrawRequest.new(user: current_user, request_date: Date.current)
-    authorize @draw, :create?
+    @draw = LaborDrawRequest.new(user: current_user, request_date: Date.current, submission_key: SecureRandom.uuid)
+    authorize @draw, :show?
     load_contractors
     @draw.contractor_name = @contractors.include?(params[:contractor_name]) ? params[:contractor_name] : @contractors.first
     @items = selected_items.where(contractor_name: @draw.contractor_name)
@@ -22,8 +22,9 @@ class LaborDrawRequestsController < FinanceController
     authorize @draw, :create?
     data = params.require(:labor_draw_request)
     plan = submitted_plan(data)
-    @draw.assign_attributes(data.permit(:contractor_name, :request_date))
+    @draw.assign_attributes(data.permit(:contractor_name, :request_date, :submission_key))
     @draw.assign_attributes(project: plan.project, house_plan: plan, status: :pending, dv_number: DocumentSequence.next_number("DV"))
+    use_document_navigation(@draw)
     rows = data.fetch(:labor_draw_items_attributes, ActionController::Parameters.new).values
     raise ActionController::BadRequest, "Too many items" if rows.size > 500
     rows.each do |row|
@@ -34,13 +35,16 @@ class LaborDrawRequestsController < FinanceController
       @draw.labor_draw_items.build(boq_item: item, work_description: item.name,
         quantity: item.material_quantity, unit_price: item.labor_unit_price, requested_amount: amount)
     end
-    if @draw.save
-      document_saved(@draw)
-    else
-      load_contractors
-      @items = selected_items.where(contractor_name: @draw.contractor_name)
-      render :new, status: :unprocessable_entity
-    end
+    @draw = SubmitLaborDrawService.new(@draw, actor: current_user, override: params[:budget_override] == "1",
+      override_reason: params[:override_reason]).call
+    document_saved(@draw)
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::StaleObjectError, ApproveDocumentService::InvalidState,
+      ApproveDocumentService::BudgetExceeded, ApproveDocumentService::OverrideReasonRequired => error
+    @error = error.is_a?(ApproveDocumentService::BudgetExceeded) ? "ยอดเบิกเกินงบคงเหลือ กรุณาปรับยอด หรือระบุเหตุผลอนุมัติเกินงบด้านล่าง" : error.message
+    @page_title = "เบิกจ่ายค่าแรง"
+    load_contractors
+    @items = selected_items.where(contractor_name: @draw.contractor_name)
+    render :new, status: :unprocessable_entity
   end
 
   def show
@@ -51,7 +55,8 @@ class LaborDrawRequestsController < FinanceController
   def approve
     authorize @draw, :approve?
     @draw = ApproveLaborDrawService.new(@draw, actor: current_user,
-      override: params[:budget_override] == "1", override_reason: params[:override_reason]).call
+      override: params[:budget_override] == "1", override_reason: params[:override_reason],
+      admin_note: params.permit(:admin_note)[:admin_note]).call
     redirect_to @draw, notice: "อนุมัติและหักยอดค่าแรงแล้ว", status: :see_other
   rescue ActiveRecord::RecordInvalid, ActiveRecord::StaleObjectError, ApproveDocumentService::InvalidState,
       ApproveDocumentService::BudgetExceeded, ApproveDocumentService::OverrideReasonRequired => error

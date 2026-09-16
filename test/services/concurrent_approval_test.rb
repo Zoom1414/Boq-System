@@ -41,9 +41,27 @@ class ConcurrentApprovalTest < ActiveSupport::TestCase
     assert_equal 1, LaborDrawRequest.where(id: [ first.id, second.id ], status: :pending).count
   end
 
+  test "simultaneous immediate submissions with one form key create and deduct once" do
+    key = SecureRandom.uuid
+    draws = 2.times.map { build_draw(amount: 700).tap { |draw| draw.user = @admin; draw.submission_key = key } }
+    results = approve_concurrently(draws, submit: true)
+    assert results.all? { |result| result == :approved }, results.inspect
+    assert_equal 1, LaborDrawRequest.where(submission_key: key).count
+    assert_equal 700, @item.reload.labor_paid_amount
+  end
+
+  test "competing immediate draws roll back the losing document and do not overspend" do
+    draws = 2.times.map { build_draw(amount: 700).tap { |draw| draw.user = @admin } }
+    results = approve_concurrently(draws, submit: true)
+    assert_equal 1, results.count(:approved), results.inspect
+    assert_equal 1, results.count(:budget_exceeded), results.inspect
+    assert_equal 1, LaborDrawRequest.where(user: @admin).count
+    assert_equal 700, @item.reload.labor_paid_amount
+  end
+
   private
 
-  def approve_concurrently(documents)
+  def approve_concurrently(documents, submit: false)
     ready = Queue.new
     start = Queue.new
     threads = documents.map do |document|
@@ -51,7 +69,8 @@ class ConcurrentApprovalTest < ActiveSupport::TestCase
         ActiveRecord::Base.connection_pool.with_connection do
           ready << true
           start.pop
-          ApproveLaborDrawService.new(document, actor: @admin).call
+          service = submit ? SubmitLaborDrawService : ApproveLaborDrawService
+          service.new(document, actor: @admin).call
           :approved
         rescue ApproveLaborDrawService::BudgetExceeded
           :budget_exceeded
