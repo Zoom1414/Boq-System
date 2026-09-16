@@ -9,8 +9,8 @@
   <%= javascript_importmap_tags %>
 </head>
 <body>
-<div class="boq-shell workspace-shell" data-controller="boq">
-  <aside class="boq-sidebar">
+<div class="boq-shell workspace-shell" data-controller="boq workspace-navigation" data-action="turbo:frame-load->workspace-navigation#loaded">
+  <aside class="boq-sidebar" data-workspace-navigation-target="sidebar" data-action="scroll->workspace-navigation#rememberScroll">
     <%= link_to dashboard_path(workspace_params), class: "boq-brand brand" do %><span class="brand-mark"><%= ui_icon(:building) %></span><span class="sidebar-content">SITEWORK<small>CONSTRUCTION MANAGEMENT</small></span><% end %>
     <button class="boq-collapse" data-action="boq#toggleSidebar" aria-label="ยุบหรือขยายเมนู">« <span class="sidebar-content">ยุบเมนู</span></button>
     <div class="sidebar-content">
@@ -36,13 +36,15 @@
         <%= workspace_nav "รอจัดซื้อ (PU)", pending_purchase_orders_path(workspace_params), controller_name == "purchase_orders" && %w[pending procure complete].include?(action_name), :wallet %>
         <%= workspace_nav "ประวัติการจัดซื้อ", history_purchase_orders_path(workspace_params), controller_name == "purchase_orders" && action_name == "history" %>
         <p>ค่าแรง / อนุมัติ</p>
-        <% if current_user.project_engineer? %><%= workspace_nav "เบิกจ่ายค่าแรง (DV)", new_labor_draw_request_path(workspace_params), controller_name == "labor_draw_requests" && %w[new create].include?(action_name), :plus %><% end %>
+        <% if current_user.project_engineer? || current_user.admin? %><%= workspace_nav "เบิกจ่ายค่าแรง (DV)", new_labor_draw_request_path(workspace_params), controller_name == "labor_draw_requests" && %w[new create].include?(action_name), :plus %><% end %>
         <%= workspace_nav "ประวัติเบิกค่าแรง", labor_draw_requests_path(workspace_params), controller_name == "labor_draw_requests" && action_name == "index", :wallet %>
         <%= workspace_nav "คำขอรออนุมัติ", approvals_path(workspace_params), controller_name == "approvals", :check %>
       </nav>
     </div>
     <div class="workspace-user sidebar-content"><span class="boq-avatar"><%= current_user.name.first %></span><div><strong><%= current_user.name %></strong><small><%= ApplicationHelper::ROLE_LABELS[current_user.role] %></small></div><%= button_to destroy_user_session_path, method: :delete, aria: { label: "ออกจากระบบ" } do %><%= ui_icon(:logout, css: "size-4") %><% end %></div>
   </aside>
+  <%= turbo_frame_tag "workspace_content", target: "_top", data: { turbo_action: "advance", navigation_path: workspace_page_path, page_title: "#{@page_title || (controller_name == 'master_boqs' ? 'Master BOQ' : 'SITEWORK')} · SITEWORK" } do %>
+  <span hidden data-workspace-page="<%= workspace_page_path %>" data-page-title="<%= @page_title || (content_for?(:title) ? yield(:title) : 'Master BOQ') %> · SITEWORK"></span>
   <header class="boq-header">
     <div class="flex items-center gap-3"><button class="boq-button boq-mobile-menu" data-action="boq#toggleSidebar" aria-label="เปิดเมนู">☰</button><div><p class="workspace-breadcrumb">WORKSPACE <span>/</span> <%= @nav_project&.code || "เริ่มต้นโครงการ" %></p><h1><%= @page_title || (controller_name == "master_boqs" ? "บัญชีปริมาณงาน (Master BOQ)" : "จัดการโครงการและแปลนบ้าน") %></h1></div></div>
     <div class="boq-header-actions"><span class="workspace-plan"><%= ui_icon(:home, css: "size-4") %><%= @nav_plan&.name || "ยังไม่ได้เลือกแปลน" %></span>
@@ -65,6 +67,7 @@
         <div class="boq-dialog-actions"><button type="button" class="boq-button" data-action="boq#closeImport">ยกเลิก</button><%= f.submit "นำเข้ารายการ", class: "boq-button boq-blue" %></div>
       <% end %>
     </dialog>
+  <% end %>
   <% end %>
 </div>
 </body>

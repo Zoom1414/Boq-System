@@ -49,8 +49,14 @@ class ApproveDocumentService
       end
       document.approval_in_progress = true
       document.update!(status: :approved, approved_by: actor, approved_at: Time.current,
-        budget_override: @override, override_reason: @override ? @override_reason : nil)
+        budget_override: @override, override_reason: @override ? @override_reason : nil, **approval_attributes)
       document
     end
+  end
+
+  private
+
+  def approval_attributes
+    {}
   end
 end
