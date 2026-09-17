@@ -7,7 +7,7 @@ module FinancialDocument
     belongs_to :approved_by, class_name: "User", optional: true
 
     # Internal service flag. Never permit this or audit/balance fields in controllers.
-    attr_accessor :approval_in_progress
+    attr_accessor :approval_in_progress, :cancellation_in_progress
 
     validate :project_matches_plan
     validate :valid_approval_transition
@@ -29,7 +29,7 @@ module FinancialDocument
   end
 
   def valid_approval_transition
-    if status_in_database == "approved" && changed?
+    if status_in_database == "approved" && changed? && !cancellation_in_progress
       errors.add(:base, "Approved documents are immutable")
     elsif approved? && !approval_in_progress
       errors.add(:status, "must be approved through the approval service")

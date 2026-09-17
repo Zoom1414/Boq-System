@@ -1,0 +1,9 @@
+<%= render "developer_panel/header", tab: :approvals %>
+<div class="dp-section-head"><h3>ตั้งค่าอนุมัติ</h3></div>
+<%= form_with url: developer_approvals_path, method: :patch, class: "finance-card dp-settings", data: { turbo_frame: "workspace_content" } do %>
+  <%= render "developer_panel/toggle", key: "allow_budget_override", description: "ถ้าปิด เอกสารที่ยอดเกินงบคงเหลือจะอนุมัติไม่ได้ ต้องปรับยอดหรือปฏิเสธเท่านั้น (BR-01)" %>
+  <%= render "developer_panel/toggle", key: "admin_instant_labor_approval", description: "ถ้าปิด Admin ที่เบิกค่าแรงจะได้สถานะรออนุมัติ แล้วต้องกดอนุมัติแยกอีกขั้น" %>
+  <%= render "developer_panel/toggle", key: "engineer_can_manage_projects", description: "ถ้าปิด เฉพาะ Admin และ Developer ที่สร้าง/แก้ไข/ลบโครงการและแปลนบ้านได้" %>
+  <div class="dp-form-actions"><%= submit_tag "บันทึกการตั้งค่า", class: "btn btn-primary", data: { turbo_submits_with: "กำลังบันทึก…" } %></div>
+<% end %>
+<p class="form-hint">ทุกการเปลี่ยนแปลงถูกบันทึกใน Audit Log · กฎที่ไม่เปลี่ยน: ระบบตัดยอด BOQ เฉพาะเอกสารที่อนุมัติแล้วเท่านั้น (BR-02)</p>

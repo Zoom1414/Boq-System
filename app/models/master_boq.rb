@@ -1,4 +1,5 @@
 class MasterBoq < ApplicationRecord
+  include Auditable
   belongs_to :house_plan
   has_many :boq_categories, -> { order(:position, :id) }, dependent: :restrict_with_error
   has_many :boq_items, through: :boq_categories

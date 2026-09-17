@@ -11,14 +11,15 @@ class SubmitLaborDrawService
     existing = LaborDrawRequest.find_by(submission_key: @draw.submission_key)
     return owned_submission(existing, actor) if existing
 
+    instant = actor.admin? && SystemSetting.enabled?(:admin_instant_labor_approval)
     LaborDrawRequest.transaction(requires_new: true) do
       # Lock before inserting line foreign keys, avoiding competing lock upgrades
       # when two Admin submissions approve against the same BOQ rows.
-      if actor.admin?
+      if instant
         BoqItem.where(id: @draw.labor_draw_items.map(&:boq_item_id)).order(:id).lock.load
       end
       @draw.save!
-      if actor.admin?
+      if instant
         ApproveLaborDrawService.new(@draw, actor: actor, override: @override, override_reason: @override_reason).call
       else
         @draw

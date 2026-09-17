@@ -41,6 +41,8 @@
         <%= workspace_nav "คำขอรออนุมัติ", approvals_path(workspace_params), controller_name == "approvals", :check %>
         <p>ทะเบียน</p>
         <%= workspace_nav "ช่าง / ผู้รับเหมาช่วง", contractors_path, controller_name == "contractors", :users %>
+        <% if current_user.dev? %><p>ผู้พัฒนา</p>
+        <%= workspace_nav "Developer Panel", developer_path, controller_name == "developer_panel", :code %><% end %>
       </nav>
     </div>
     <div class="workspace-user sidebar-content"><span class="boq-avatar"><%= current_user.name.first %></span><div><strong><%= current_user.name %></strong><small><%= ApplicationHelper::ROLE_LABELS[current_user.role] %></small></div><%= button_to destroy_user_session_path, method: :delete, aria: { label: "ออกจากระบบ" } do %><%= ui_icon(:logout, css: "size-4") %><% end %></div>
@@ -56,6 +58,7 @@
     <% end %></div>
   </header>
   <main class="boq-main <%= 'workspace-page' unless controller_name == 'master_boqs' %>" id="main-content">
+    <%= render "shared/announcement" %>
     <div id="boq-notice"><%= render "shared/flash" %></div>
     <%= yield %>
   </main>

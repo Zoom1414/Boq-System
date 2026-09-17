@@ -10,3 +10,6 @@ en:
         labor_unit_price: "ค่าแรงต่อหน่วย"
         contractor: "ผู้รับเหมา"
         note: "หมายเหตุ"
+  devise:
+    failure:
+      inactive: "บัญชีนี้ถูกปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ"

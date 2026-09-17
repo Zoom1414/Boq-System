@@ -1,0 +1,21 @@
+<%= render "developer_panel/header", tab: :system %>
+<div class="dp-section-head"><h3>ควบคุมระบบ</h3></div>
+<div class="dp-two">
+  <%= form_with url: developer_system_path, method: :patch, class: "finance-card dp-settings #{'is-danger' if SystemSetting.enabled?(:maintenance_mode)}", data: { turbo_frame: "workspace_content" } do %>
+    <div class="dp-card-title"><span class="dp-stat-icon is-red"><%= ui_icon(:power, css: "size-4") %></span><div><strong>โหมดปิดปรับปรุง</strong><small>ผู้ใช้ทั่วไปและวิศวกรจะเห็นหน้าปิดปรับปรุง · Developer และ Admin ยังใช้งานได้</small></div></div>
+    <%= render "developer_panel/toggle", key: "maintenance_mode", description: SystemSetting.enabled?(:maintenance_mode) ? "เปิดอยู่ — ผู้ใช้อื่นเข้าระบบไม่ได้" : "ปิดอยู่ — ทุกคนใช้งานได้ตามปกติ" %>
+    <div class="dp-field"><%= label_tag "settings_maintenance_message", "ข้อความที่แสดง" %><%= text_area_tag "settings[maintenance_message]", SystemSetting.value(:maintenance_message), id: "settings_maintenance_message", rows: 3, maxlength: 300 %></div>
+    <div class="dp-form-actions"><%= submit_tag "บันทึก", class: "btn btn-primary", data: { turbo_confirm: "ยืนยันการเปลี่ยนสถานะระบบ?" } %></div>
+  <% end %>
+  <section class="finance-card dp-settings">
+    <div class="dp-card-title"><span class="dp-stat-icon is-dark"><%= ui_icon(:settings, css: "size-4") %></span><div><strong>ข้อมูลระบบ</strong><small>สถานะเซิร์ฟเวอร์และฐานข้อมูล</small></div></div>
+    <dl class="dp-info"><% @info.each do |label, value| %><div><dt><%= label %></dt><dd><%= value %></dd></div><% end %></dl>
+    <p class="dp-preview-label">จำนวนข้อมูล</p>
+    <dl class="dp-info dp-info-grid"><% @tables.each do |label, value| %><div><dt><%= label %></dt><dd><%= number_with_delimiter(value) %></dd></div><% end %></dl>
+    <div class="dp-export-row">
+      <%= link_to developer_export_path("users"), class: "btn btn-secondary", data: { turbo: false } do %><%= ui_icon(:download, css: "size-4") %> ผู้ใช้<% end %>
+      <%= link_to developer_export_path("logins"), class: "btn btn-secondary", data: { turbo: false } do %><%= ui_icon(:download, css: "size-4") %> Login<% end %>
+      <%= link_to developer_export_path("audit"), class: "btn btn-secondary", data: { turbo: false } do %><%= ui_icon(:download, css: "size-4") %> Audit Log<% end %>
+    </div>
+  </section>
+</div>

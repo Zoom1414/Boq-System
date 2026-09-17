@@ -1,4 +1,5 @@
 class Project < ApplicationRecord
+  include Auditable
   has_many :house_plans, dependent: :restrict_with_error
   has_many :purchase_orders, dependent: :restrict_with_error
   has_many :labor_draw_requests, dependent: :restrict_with_error

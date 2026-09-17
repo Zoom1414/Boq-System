@@ -11,7 +11,8 @@ class ProjectPolicy
   alias_method :show?, :index?
 
   def create?
-    @user.present? && (@user.dev? || @user.admin? || @user.project_engineer?)
+    @user.present? && (@user.dev? || @user.admin? ||
+      (@user.project_engineer? && SystemSetting.enabled?(:engineer_can_manage_projects)))
   end
 
   alias_method :new?, :create?

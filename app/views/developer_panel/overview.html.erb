@@ -1,0 +1,39 @@
+<%= render "developer_panel/header", tab: :overview %>
+<div class="dp-section-head"><h3>ภาพรวมระบบ</h3><%= link_to developer_path, class: "dp-icon-btn", title: "รีเฟรช", aria: { label: "รีเฟรช" }, data: { turbo_frame: "workspace_content" } do %><%= ui_icon(:refresh, css: "size-5") %><% end %></div>
+<section class="dp-stats">
+  <% [ [ :users, @stats[:users], "ผู้ใช้ทั้งหมด", "blue" ], [ :unlock, @stats[:active], "บัญชีที่ใช้งานได้", "green" ], [ :history, @stats[:logins_today], "Login วันนี้", "orange" ],
+       [ :clipboard, @stats[:actions_today], "Action วันนี้", "purple" ], [ :folder, @stats[:projects], "โครงการทั้งหมด", "dark" ] ].each do |icon, value, label, tone| %>
+    <div class="dp-stat"><span class="dp-stat-icon is-<%= tone %>"><%= ui_icon(icon, css: "size-5") %></span><strong><%= value %></strong><small><%= label %></small></div>
+  <% end %>
+</section>
+<% if @failed_today.positive? || SystemSetting.enabled?(:maintenance_mode) || SystemSetting.enabled?(:announcement_active) %>
+<div class="dp-flags">
+  <% if @failed_today.positive? %><%= link_to developer_logins_path(result: "failed"), class: "dp-flag is-red", data: { turbo_frame: "workspace_content" } do %><%= ui_icon(:lock, css: "size-4") %> Login ไม่สำเร็จวันนี้ <b><%= @failed_today %></b> ครั้ง<% end %><% end %>
+  <% if SystemSetting.enabled?(:maintenance_mode) %><%= link_to developer_system_path, class: "dp-flag is-red", data: { turbo_frame: "workspace_content" } do %><%= ui_icon(:power, css: "size-4") %> โหมดปิดปรับปรุงเปิดอยู่<% end %><% end %>
+  <% if SystemSetting.enabled?(:announcement_active) %><%= link_to developer_notifications_path, class: "dp-flag is-blue", data: { turbo_frame: "workspace_content" } do %><%= ui_icon(:bell, css: "size-4") %> มีประกาศแสดงอยู่<% end %><% end %>
+</div>
+<% end %>
+<div class="dp-two">
+  <section class="finance-card dp-feed">
+    <div class="dp-feed-head"><span><%= ui_icon(:history, css: "size-4") %> LOGIN ล่าสุด</span><%= link_to "ดูทั้งหมด →", developer_logins_path, class: "ov-link", data: { turbo_frame: "workspace_content" } %></div>
+    <% if @recent_logins.any? %>
+      <% @recent_logins.each do |event| %>
+        <div class="dp-feed-row">
+          <div><strong><%= event.user&.name || event.email %></strong><small><%= event.email %><%= " · #{event.reason_label}" unless event.success %></small></div>
+          <div class="dp-feed-meta"><% if event.success %><%= render "developer_panel/role_badge", role: event.user&.role || "user" %><% else %><span class="dp-role is-failed">FAILED</span><% end %><small><%= dp_time(event.created_at) %></small></div>
+        </div>
+      <% end %>
+    <% else %><%= render "finance/empty", title: "ยังไม่มีประวัติ Login", description: "ระบบจะบันทึกทุกครั้งที่มีการเข้าสู่ระบบ" %><% end %>
+  </section>
+  <section class="finance-card dp-feed">
+    <div class="dp-feed-head"><span><%= ui_icon(:clipboard, css: "size-4") %> ACTION ล่าสุด</span><%= link_to "ดูทั้งหมด →", developer_audit_path, class: "ov-link", data: { turbo_frame: "workspace_content" } %></div>
+    <% if @recent_actions.any? %>
+      <% @recent_actions.each do |log| %>
+        <div class="dp-feed-row">
+          <div><strong><%= log.user&.name || "ระบบ" %></strong><small class="dp-clamp"><%= log.summary %></small></div>
+          <div class="dp-feed-meta"><span class="dp-action is-<%= log.action_tone %>"><%= log.action_label %></span><small><%= dp_time(log.created_at) %></small></div>
+        </div>
+      <% end %>
+    <% else %><%= render "finance/empty", title: "ยังไม่มี Action", description: "การสร้าง แก้ไข อนุมัติ และยกเลิกเอกสารจะแสดงที่นี่" %><% end %>
+  </section>
+</div>

@@ -19,4 +19,8 @@ class LaborDrawRequestPolicy
   end
 
   alias_method :override_budget?, :approve?
+
+  def cancel?
+    user&.dev? == true
+  end
 end

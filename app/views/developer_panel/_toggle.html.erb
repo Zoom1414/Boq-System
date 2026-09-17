@@ -1,0 +1,6 @@
+<%# locals: key, description %>
+<label class="dp-toggle">
+  <span class="dp-toggle-text"><strong><%= SystemSetting::LABELS[key] %></strong><small><%= description %></small></span>
+  <%= hidden_field_tag "settings[#{key}]", "false", id: nil %>
+  <%= check_box_tag "settings[#{key}]", "true", SystemSetting.enabled?(key), class: "dp-switch", id: "setting_#{key}" %>
+</label>

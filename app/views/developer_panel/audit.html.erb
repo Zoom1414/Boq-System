@@ -1,0 +1,32 @@
+<%= render "developer_panel/header", tab: :audit %>
+<div class="dp-section-head"><h3>Audit Log <span class="count-chip"><%= @logs.size %> รายการ</span></h3></div>
+<%= form_with url: developer_audit_path, method: :get, class: "finance-card ct-filter", data: { turbo_frame: "workspace_content", turbo_action: "advance" } do |f| %>
+  <div class="ct-search"><%= ui_icon(:search, css: "size-4") %><%= f.search_field :q, value: @query, placeholder: "ค้นหาเลขเอกสาร ชื่อช่าง รหัส BOQ…", aria: { label: "ค้นหา" } %></div>
+  <div><%= f.select :log_action, AuditLog::ACTIONS.map { |key, (label, _)| [ label, key ] }, { selected: @action, include_blank: "ทุก Action" }, aria: { label: "Action" } %></div>
+  <div><%= f.select :user_id, @users.map { |u| [ u.name, u.id ] }, { selected: @user_id, include_blank: "ทุกผู้ใช้" }, aria: { label: "ผู้ใช้" } %></div>
+  <div class="dp-date"><%= f.date_field :from, value: params[:from], aria: { label: "ตั้งแต่วันที่" } %></div>
+  <div class="dp-date"><%= f.date_field :to, value: params[:to], aria: { label: "ถึงวันที่" } %></div>
+  <button class="btn btn-secondary">กรอง</button>
+<% end %>
+<section class="finance-card dp-feed">
+  <% if @logs.any? %>
+    <% @logs.each do |log| %>
+      <details class="dp-log">
+        <summary class="dp-feed-row">
+          <div><strong><%= log.user&.name || "ระบบ" %></strong><small class="dp-clamp"><%= log.summary %></small></div>
+          <div class="dp-feed-meta"><span class="dp-action is-<%= log.action_tone %>"><%= log.action_label %></span><small><%= dp_time(log.created_at) %></small></div>
+        </summary>
+        <div class="dp-log-detail">
+          <p><%= log.summary %></p>
+          <dl><div><dt>ผู้ทำรายการ</dt><dd><%= log.user ? "#{log.user.name} <#{log.user.email}>" : "ระบบ / ไม่ระบุ" %></dd></div><div><dt>ข้อมูลอ้างอิง</dt><dd><%= log.auditable_type %> #<%= log.auditable_id %></dd></div></dl>
+          <% if log.details.present? %>
+            <table class="dp-diff"><thead><tr><th>ฟิลด์</th><th>ก่อน</th><th>หลัง</th></tr></thead><tbody>
+              <% log.details.each do |field, (before, after)| %><tr><td><%= field %></td><td class="is-before"><%= before.presence || "—" %></td><td class="is-after"><%= after.presence || "—" %></td></tr><% end %>
+            </tbody></table>
+          <% end %>
+        </div>
+      </details>
+    <% end %>
+  <% else %><%= render "finance/empty", title: "ไม่พบรายการตามเงื่อนไข" %><% end %>
+</section>
+<p class="form-hint">แสดง 300 รายการล่าสุด · คลิกแต่ละรายการเพื่อดูค่าก่อน/หลังแก้ไข · บันทึกอัตโนมัติทุกครั้งที่สร้าง แก้ไข อนุมัติ ปฏิเสธ หรือยกเลิก</p>

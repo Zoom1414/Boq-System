@@ -1,6 +1,8 @@
 class ApplicationController < ActionController::Base
   include Pundit::Authorization
   before_action :authenticate_user!
+  before_action :set_current_user
+  before_action :enforce_maintenance_mode, unless: :devise_controller?
   before_action :load_navigation, unless: :devise_controller?
   layout :workspace_layout
 
@@ -15,6 +17,18 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   private
+
+  def set_current_user
+    Current.user = current_user
+  end
+
+  # While maintenance mode is on only Developer and Admin accounts can use the app.
+  def enforce_maintenance_mode
+    return unless SystemSetting.enabled?(:maintenance_mode)
+    return if current_user&.dev? || current_user&.admin?
+
+    render "shared/maintenance", layout: false, status: :service_unavailable
+  end
 
   def workspace_layout
     devise_controller? ? "application" : "boq"

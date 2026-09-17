@@ -1,0 +1,21 @@
+<%= render "developer_panel/header", tab: :notifications %>
+<div class="dp-section-head"><h3>การแจ้งเตือน</h3></div>
+<div class="dp-two">
+  <%= form_with url: developer_notifications_path, method: :patch, class: "finance-card dp-settings", data: { turbo_frame: "workspace_content" } do %>
+    <div class="dp-card-title"><span class="dp-stat-icon is-blue"><%= ui_icon(:bell, css: "size-4") %></span><div><strong>ประกาศถึงผู้ใช้ทุกคน</strong><small>แสดงเป็นแถบด้านบนของทุกหน้าในระบบ</small></div></div>
+    <%= render "developer_panel/toggle", key: "announcement_active", description: "เปิดเพื่อแสดงประกาศทันที ปิดเพื่อซ่อน" %>
+    <div class="dp-field"><%= label_tag "settings_announcement_level", "ระดับความสำคัญ" %><%= select_tag "settings[announcement_level]", options_for_select([ [ "ข้อมูลทั่วไป (ฟ้า)", "info" ], [ "เตือน (เหลือง)", "warning" ], [ "ด่วน (แดง)", "danger" ] ], SystemSetting.value(:announcement_level)), id: "settings_announcement_level" %></div>
+    <div class="dp-field"><%= label_tag "settings_announcement_message", "ข้อความประกาศ" %><%= text_area_tag "settings[announcement_message]", SystemSetting.value(:announcement_message), id: "settings_announcement_message", rows: 3, maxlength: 300, placeholder: "เช่น วันที่ 30 ก.ย. ปิดรับใบเบิกค่าแรงเวลา 17:00 น." %></div>
+    <div class="dp-form-actions"><%= submit_tag "บันทึกประกาศ", class: "btn btn-primary" %></div>
+  <% end %>
+  <section class="finance-card dp-settings">
+    <div class="dp-card-title"><span class="dp-stat-icon is-orange"><%= ui_icon(:clipboard, css: "size-4") %></span><div><strong>รายการรอดำเนินการ</strong><small>จำนวนที่แสดงในไอคอนกระดิ่ง</small></div></div>
+    <div class="dp-pending"><span>รอจัดซื้อ (PU)</span><b><%= @pending_pu %></b></div>
+    <div class="dp-pending"><span>ใบเบิก DV รออนุมัติ</span><b><%= @pending_dv %></b></div>
+    <p class="dp-preview-label">ตัวอย่างประกาศ</p>
+    <% if SystemSetting.value(:announcement_message).present? %>
+      <div class="dp-announcement is-<%= SystemSetting.value(:announcement_level) %>"><%= ui_icon(:bell, css: "size-4") %><span><%= SystemSetting.value(:announcement_message) %></span></div>
+      <small class="form-hint"><%= SystemSetting.enabled?(:announcement_active) ? "กำลังแสดงอยู่" : "ยังไม่แสดง (ปิดอยู่)" %></small>
+    <% else %><p class="form-hint">ยังไม่มีข้อความประกาศ</p><% end %>
+  </section>
+</div>

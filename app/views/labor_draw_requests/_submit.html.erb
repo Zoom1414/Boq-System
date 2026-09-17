@@ -1,5 +1,5 @@
 <% if policy(@draw).create? %>
-  <%= submit_tag current_user.admin? ? "บันทึกเบิกค่าแรงทันที" : "ส่งคำขอเบิกค่าแรง", class: "btn btn-purple", data: { turbo_submits_with: "กำลังบันทึก…", labor_form_target: "submit" } %>
+  <%= submit_tag current_user.admin? && SystemSetting.enabled?(:admin_instant_labor_approval) ? "บันทึกเบิกค่าแรงทันที" : "ส่งคำขอเบิกค่าแรง", class: "btn btn-purple", data: { turbo_submits_with: "กำลังบันทึก…", labor_form_target: "submit" } %>
 <% else %>
   <p class="form-hint">ดูรายการได้เท่านั้น การเบิกค่าแรงใช้สิทธิ์ Admin หรือวิศวกรโครงการ</p>
 <% end %>
