@@ -37,6 +37,6 @@ class BoqItemsController < BoqWorkspaceController
 
   def item_params
     params.require(:boq_item).permit(:code, :name, :unit, :material_quantity,
-      :material_unit_price, :labor_unit_price, :progress_percentage, :contractor_name, :note, :lock_version)
+      :material_unit_price, :labor_unit_price, :progress_percentage, :contractor_id, :note, :lock_version)
   end
 end

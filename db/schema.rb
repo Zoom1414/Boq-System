@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_13_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -27,6 +27,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_000000) do
   create_table "boq_items", force: :cascade do |t|
     t.bigint "boq_category_id", null: false
     t.string "code", null: false
+    t.bigint "contractor_id"
     t.string "contractor_name"
     t.datetime "created_at", null: false
     t.decimal "labor_paid_amount", precision: 18, scale: 2, default: "0.0", null: false
@@ -46,8 +47,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_000000) do
     t.datetime "updated_at", null: false
     t.index ["boq_category_id", "code"], name: "index_boq_items_on_boq_category_id_and_code", unique: true
     t.index ["boq_category_id"], name: "index_boq_items_on_boq_category_id"
+    t.index ["contractor_id"], name: "index_boq_items_on_contractor_id"
     t.index ["contractor_name"], name: "index_boq_items_on_contractor_name"
     t.check_constraint "material_quantity >= 0::numeric AND material_used_qty >= 0::numeric AND material_unit_price >= 0::numeric AND labor_unit_price >= 0::numeric AND labor_paid_amount >= 0::numeric AND progress_percentage >= 0::numeric AND progress_percentage <= 100::numeric", name: "boq_items_nonnegative_inputs"
+  end
+
+  create_table "contractors", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "bank_account_name"
+    t.string "bank_account_number"
+    t.string "bank_name"
+    t.datetime "created_at", null: false
+    t.string "first_name", null: false
+    t.string "full_name", null: false
+    t.string "last_name"
+    t.text "note"
+    t.string "phone"
+    t.string "trade"
+    t.datetime "updated_at", null: false
+    t.index "lower((full_name)::text)", name: "index_contractors_on_lower_full_name", unique: true
+    t.index ["bank_account_number"], name: "index_contractors_on_bank_account_number", unique: true, where: "(bank_account_number IS NOT NULL)"
+    t.index ["trade"], name: "index_contractors_on_trade"
+    t.check_constraint "bank_account_number IS NULL OR bank_account_number::text ~ '^[0-9]{10,15}$'::text", name: "contractors_bank_account_digits"
   end
 
   create_table "document_sequences", force: :cascade do |t|
@@ -89,12 +110,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_000000) do
     t.datetime "approved_at"
     t.bigint "approved_by_id"
     t.boolean "budget_override", default: false, null: false
+    t.bigint "contractor_id"
     t.string "contractor_name", null: false
     t.datetime "created_at", null: false
     t.string "dv_number", null: false
     t.bigint "house_plan_id", null: false
     t.integer "lock_version", default: 0, null: false
     t.text "override_reason"
+    t.string "payee_bank_account_name"
+    t.string "payee_bank_account_number"
+    t.string "payee_bank_name"
     t.bigint "project_id", null: false
     t.date "request_date", null: false
     t.string "status", default: "pending", null: false
@@ -103,6 +128,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_000000) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["approved_by_id"], name: "index_labor_draw_requests_on_approved_by_id"
+    t.index ["contractor_id"], name: "index_labor_draw_requests_on_contractor_id"
     t.index ["dv_number"], name: "index_labor_draw_requests_on_dv_number", unique: true
     t.index ["house_plan_id"], name: "index_labor_draw_requests_on_house_plan_id"
     t.index ["project_id"], name: "index_labor_draw_requests_on_project_id"
@@ -201,9 +227,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_000000) do
 
   add_foreign_key "boq_categories", "master_boqs"
   add_foreign_key "boq_items", "boq_categories"
+  add_foreign_key "boq_items", "contractors"
   add_foreign_key "house_plans", "projects"
   add_foreign_key "labor_draw_items", "boq_items"
   add_foreign_key "labor_draw_items", "labor_draw_requests"
+  add_foreign_key "labor_draw_requests", "contractors"
   add_foreign_key "labor_draw_requests", "house_plans"
   add_foreign_key "labor_draw_requests", "projects"
   add_foreign_key "labor_draw_requests", "users"

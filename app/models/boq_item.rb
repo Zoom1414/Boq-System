@@ -1,5 +1,6 @@
 class BoqItem < ApplicationRecord
   belongs_to :boq_category
+  belongs_to :contractor, optional: true
   has_one :master_boq, through: :boq_category
   has_many :po_items, dependent: :restrict_with_error
   has_many :labor_draw_items, dependent: :restrict_with_error
@@ -7,6 +8,7 @@ class BoqItem < ApplicationRecord
   attr_accessor :balance_update_in_progress
 
   before_validation :calculate_totals
+  before_validation :sync_contractor
   after_save :refresh_master_budget, if: :budget_changed?
   after_destroy :refresh_master_budget
 
@@ -30,6 +32,17 @@ class BoqItem < ApplicationRecord
   end
 
   private
+
+  # contractor_id is the source of truth; contractor_name is kept as a readable snapshot
+  # (CSV import / legacy data may supply only a name, which is linked to the registry).
+  def sync_contractor
+    if will_save_change_to_contractor_id?
+      self.contractor_name = contractor&.full_name
+    elsif will_save_change_to_contractor_name?
+      self.contractor = contractor_name.to_s.squish.presence && Contractor.resolve_name!(contractor_name)
+      self.contractor_name = contractor&.full_name
+    end
+  end
 
   def calculate_totals
     self.material_total = (material_quantity.to_d * material_unit_price.to_d).round(2)

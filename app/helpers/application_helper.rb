@@ -26,7 +26,10 @@ module ApplicationHelper
       wallet: "M3 7h18v14H3zM3 7V4h15v3M16 12h5v5h-5z",
       check: "m5 12 4 4L19 6",
       logout: "M9 4H4v16h5M13 8l4 4-4 4M8 12h13",
-      lock: "M5 10h14v11H5zM8 10V6a4 4 0 0 1 8 0v4"
+      lock: "M5 10h14v11H5zM8 10V6a4 4 0 0 1 8 0v4",
+      users: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
+      search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16M21 21l-4.3-4.3",
+      bank: "M3 21h18M4 10h16M12 3l9 5H3zM6 10v8M10 10v8M14 10v8M18 10v8"
     }
     tag.svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
       "stroke-width": 1.7, "stroke-linecap": "round", "stroke-linejoin": "round",

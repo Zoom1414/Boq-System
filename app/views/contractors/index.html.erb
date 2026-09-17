@@ -1,0 +1,44 @@
+<% can_edit = policy(Contractor).create? %>
+<div class="finance-heading">
+  <div><p class="eyebrow">CONTRACTOR REGISTRY</p><h2>ทะเบียนช่าง / ผู้รับเหมาช่วง</h2><p>ข้อมูลผู้รับเงินสำหรับใบเบิกค่าแรง (DV) · หนึ่งเลขบัญชีผูกกับช่างได้เพียงคนเดียว เพื่อป้องกันการจ่ายซ้ำ</p></div>
+  <% if can_edit %><%= link_to new_contractor_path, class: "btn btn-primary", data: { turbo_frame: "workspace_content" } do %><%= ui_icon(:plus, css: "size-4") %> เพิ่มช่าง<% end %><% end %>
+</div>
+
+<section class="ct-stats" aria-label="สรุปทะเบียนช่าง">
+  <div class="ct-stat"><span class="ov-kpi-icon gold"><%= ui_icon(:users) %></span><div><small>ช่างทั้งหมด</small><strong><%= @stats[:total] %> <em>คน</em></strong></div></div>
+  <div class="ct-stat"><span class="ov-kpi-icon blue"><%= ui_icon(:check) %></span><div><small>ใช้งานอยู่</small><strong><%= @stats[:active] %> <em>คน</em></strong></div></div>
+  <%= link_to contractors_path(status: "incomplete"), class: "ct-stat #{'is-warning' if @stats[:incomplete].positive?}", data: { turbo_frame: "workspace_content" } do %><span class="ov-kpi-icon amber"><%= ui_icon(:bank) %></span><div><small>ข้อมูลบัญชีไม่ครบ</small><strong><%= @stats[:incomplete] %> <em>คน</em></strong></div><% end %>
+  <div class="ct-stat"><span class="ov-kpi-icon purple"><%= ui_icon(:wallet) %></span><div><small>จ่ายค่าแรงแล้วรวม</small><strong><%= baht(@stats[:paid]) %></strong></div></div>
+</section>
+
+<%= form_with url: contractors_path, method: :get, class: "finance-card ct-filter", data: { turbo_frame: "workspace_content", turbo_action: "advance" } do |f| %>
+  <div class="ct-search"><%= ui_icon(:search, css: "size-4") %><%= f.label :q, "ค้นหาช่าง", class: "sr-only" %><%= f.search_field :q, value: @query, placeholder: "ค้นหาชื่อ ประเภทช่าง เบอร์โทร หรือเลขบัญชี…", autocomplete: "off" %></div>
+  <div><%= f.label :trade, "ประเภทช่าง", class: "sr-only" %><%= f.select :trade, @trades, { selected: @trade, include_blank: "ทุกประเภท" } %></div>
+  <div><%= f.label :status, "สถานะ", class: "sr-only" %><%= f.select :status, [ [ "ใช้งานอยู่", "active" ], [ "ปิดใช้งาน", "inactive" ], [ "บัญชีไม่ครบ", "incomplete" ] ], { selected: @status, include_blank: "ทุกสถานะ" } %></div>
+  <button type="submit" class="btn btn-secondary">ค้นหา</button>
+  <% if @query.present? || @trade || @status %><%= link_to "ล้างตัวกรอง", contractors_path, class: "ov-link", data: { turbo_frame: "workspace_content" } %><% end %>
+<% end %>
+
+<section class="finance-card">
+  <div class="ov-card-head"><div><h3>รายชื่อช่าง</h3></div><span class="count-chip"><%= @contractors.size %> รายการ</span></div>
+  <% if @contractors.any? %>
+    <div class="finance-table-wrap"><table class="finance-table ct-table">
+      <thead><tr><th>ชื่อ-นามสกุล</th><th>ประเภทช่าง</th><th>บัญชีรับเงิน</th><th class="number">งานที่รับ</th><th class="number">รับเงินแล้ว</th><th class="number">รออนุมัติ</th><th></th></tr></thead>
+      <tbody>
+        <% @contractors.each do |contractor| %>
+          <tr class="<%= 'is-inactive' unless contractor.active? %>">
+            <td><%= link_to contractor_path(contractor), class: "ct-person", data: { turbo_frame: "workspace_content" } do %><span class="ct-avatar"><%= contractor_initials(contractor) %></span><span><strong><%= contractor.full_name %></strong><small><%= contractor.phone.presence || "ไม่มีเบอร์โทร" %><%= " · ปิดใช้งาน" unless contractor.active? %></small></span><% end %></td>
+            <td><% if contractor.trade %><span class="ct-trade"><%= contractor.trade %></span><% else %><span class="ct-muted">—</span><% end %></td>
+            <td><% if contractor.bank_ready? %><strong class="ct-account"><%= bank_account_display(contractor.bank_account_number) %></strong><small class="ct-bank"><%= contractor.bank_name %></small><% else %><span class="ct-flag"><%= ui_icon(:bank, css: "size-3") %> ยังไม่มีบัญชี</span><% end %></td>
+            <td class="number"><%= @job_counts.fetch(contractor.id, 0) %> งาน</td>
+            <td class="number strong green-text"><%= number_with_precision(@paid.fetch(contractor.id, 0), precision: 2, delimiter: ",") %></td>
+            <td class="number"><% pending = @pending.fetch(contractor.id, 0) %><%= pending.positive? ? tag.span(number_with_precision(pending, precision: 2, delimiter: ","), class: "amber-text") : "—" %></td>
+            <td class="ct-row-actions"><%= link_to "ประวัติรับเงิน", contractor_path(contractor), class: "btn btn-secondary", data: { turbo_frame: "workspace_content" } %><% if can_edit %><%= link_to "แก้ไข", edit_contractor_path(contractor), class: "ov-link", data: { turbo_frame: "workspace_content" } %><% end %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  <% else %>
+    <%= render "finance/empty", title: @query.present? || @trade || @status ? "ไม่พบช่างตามเงื่อนไขที่ค้นหา" : "ยังไม่มีช่างในทะเบียน", description: can_edit ? "กด “เพิ่มช่าง” เพื่อบันทึกชื่อ ประเภทช่าง และบัญชีรับเงิน" : "ติดต่อ Admin เพื่อเพิ่มข้อมูลช่าง" %>
+  <% end %>
+</section>

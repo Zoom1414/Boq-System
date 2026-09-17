@@ -5,6 +5,8 @@
 @import "./boq.css";
 @import "./workspace.css";
 @import "./usability.css";
+@import "./overview.css";
+@import "./contractors.css";
 
 @theme {
   --font-sans: "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;

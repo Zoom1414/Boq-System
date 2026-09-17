@@ -20,6 +20,7 @@ Rails.application.routes.draw do
     end
   end
   get "approvals", to: "approvals#index"
+  resources :contractors, only: [ :index, :show, :new, :create, :edit, :update ]
   get "master_boq", to: "master_boqs#show", as: :master_boq
   post "house_plans/:house_plan_id/master_boq", to: "master_boqs#create", as: :create_master_boq
   resources :master_boqs, only: [] do

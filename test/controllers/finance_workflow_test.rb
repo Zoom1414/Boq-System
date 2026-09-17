@@ -113,7 +113,7 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
 
   test "contractor item frame filters items and invalid empty DV is redisplayed" do
     create_boq_item("OTHER").update!(contractor_name: "Team B")
-    get new_labor_draw_request_path, params: @context.merge(contractor_name: "Team B"), headers: { "Turbo-Frame" => "labor-items" }
+    get new_labor_draw_request_path, params: @context.merge(contractor_id: Contractor.find_by_name("Team B").id), headers: { "Turbo-Frame" => "labor-items" }
     assert_response :success
     assert_select "turbo-frame#labor-items", text: /OTHER/
     assert_select ".labor-entry", text: /CONCRETE/, count: 0
@@ -163,7 +163,7 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     end
     sign_in @engineer
     data = draw_params
-    data[:labor_draw_request][:contractor_name] = "Wrong team"
+    data[:labor_draw_request][:contractor_id] = Contractor.create!(first_name: "Wrong team").id
     assert_no_difference "LaborDrawRequest.count" do
       post labor_draw_requests_path, params: data
       assert_response :not_found
@@ -284,7 +284,7 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
   end
 
   def draw_params
-    { labor_draw_request: @context.merge(contractor_name: "Team A", request_date: Date.current, user_id: @admin.id,
+    { labor_draw_request: @context.merge(contractor_id: @contractor.id, request_date: Date.current, user_id: @admin.id,
       labor_draw_items_attributes: { "0" => { boq_item_id: @item.id, requested_amount: 400, unit_price: 1, paid_amount: 900 } }) }
   end
 end

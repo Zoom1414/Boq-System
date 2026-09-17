@@ -60,6 +60,7 @@ module FinanceHelper
     when "labor_draw_requests"
       %w[new create].include?(action_name) ? new_labor_draw_request_path : labor_draw_requests_path
     when "approvals" then approvals_path
+    when "contractors" then contractors_path
     else projects_path
     end
   end

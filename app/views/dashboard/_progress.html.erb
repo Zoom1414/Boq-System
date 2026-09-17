@@ -1,21 +1,44 @@
-<section class="progress-grid" aria-label="กราฟความคืบหน้างานก่อสร้าง">
-  <div class="finance-card progress-overall">
-    <div class="progress-card-heading"><div><p class="eyebrow">CONSTRUCTION PROGRESS</p><h3>ความคืบหน้างานก่อสร้าง</h3></div><span class="count-chip"><%= @progress.items.size %> รายการ</span></div>
-    <div class="progress-ring-wrap">
-      <svg class="progress-ring" viewBox="0 0 200 200" role="img" aria-labelledby="progress-chart-title progress-chart-description">
-        <title id="progress-chart-title">ความคืบหน้ารวม <%= @progress.overall %>%</title>
-        <desc id="progress-chart-description">คำนวณจากเปอร์เซ็นต์ผลงานใน BOQ ถ่วงน้ำหนักด้วยงบวัสดุและค่าแรง ไม่ใช่สัดส่วนยอดเบิกจ่าย</desc>
-        <circle class="progress-track" cx="100" cy="100" r="80" />
-        <circle class="progress-arc" cx="100" cy="100" r="80" pathLength="100" stroke-dasharray="<%= @progress.overall %> 100" />
-      </svg>
-      <div class="progress-ring-label"><strong><%= @progress.overall %><small>%</small></strong><span>ผลงานรวม</span></div>
+<section class="ov-card ov-progress" aria-label="ความคืบหน้างานก่อสร้าง">
+  <div class="ov-card-head">
+    <div><p class="ov-eyebrow">CONSTRUCTION PROGRESS</p><h3>ความคืบหน้างานก่อสร้าง</h3></div>
+    <%= link_to "อัปเดตผลงาน ↗", master_boq_path(workspace_params), data: { turbo_frame: "workspace_content" }, class: "ov-link" %>
+  </div>
+
+  <div class="ov-progress-body">
+    <div class="ov-ring-col">
+      <div class="ov-ring">
+        <svg viewBox="0 0 200 200" role="img" aria-labelledby="progress-chart-title progress-chart-description">
+          <title id="progress-chart-title">ความคืบหน้ารวม <%= @progress.overall %>%</title>
+          <desc id="progress-chart-description">คำนวณจากเปอร์เซ็นต์ผลงานใน BOQ ถ่วงน้ำหนักด้วยงบวัสดุและค่าแรง ไม่ใช่สัดส่วนยอดเบิกจ่าย</desc>
+          <circle class="ov-ring-track" cx="100" cy="100" r="82" />
+          <circle class="ov-ring-arc" cx="100" cy="100" r="82" pathLength="100" stroke-dasharray="<%= @progress.overall %> 100" />
+        </svg>
+        <div class="ov-ring-label"><strong><%= @progress.overall %><small>%</small></strong><span>ผลงานรวม</span></div>
+      </div>
+      <div class="ov-ring-counts">
+        <div><strong class="green"><%= @progress.completed_count %></strong><span>เสร็จแล้ว</span></div>
+        <div><strong><%= @progress.items.size - @progress.completed_count %></strong><span>คงเหลือ</span></div>
+        <div><strong><%= @progress.items.size %></strong><span>ทั้งหมด</span></div>
+      </div>
     </div>
-    <div class="progress-counts"><div><strong><%= @progress.completed_count %></strong><span>รายการเสร็จแล้ว</span></div><div><strong><%= @progress.items.size - @progress.completed_count %></strong><span>รายการที่เหลือ</span></div></div>
-    <p class="progress-explanation">ถ่วงน้ำหนักด้วยงบ BOQ · ถ้ายังไม่มีงบ ใช้ค่าเฉลี่ยผลงาน</p>
+
+    <div class="ov-cat-col">
+      <p class="ov-sub-title">แยกตามหมวดงาน <span class="count-chip"><%= @progress.categories.size %> หมวด</span></p>
+      <% if @progress.categories.any? %>
+        <div class="ov-cats">
+          <% @progress.categories.each do |category| %>
+            <div class="ov-cat <%= 'is-done' if category[:progress].to_d >= 100 %>">
+              <div class="ov-cat-top"><strong><%= category[:name] %></strong><b><%= category[:progress] %>%</b></div>
+              <div class="ov-cat-track" role="progressbar" aria-label="<%= category[:name] %>" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= category[:progress] %>"><span style="width:<%= category[:progress] %>%"></span></div>
+              <small>เสร็จแล้ว <%= category[:completed] %> / <%= category[:count] %> รายการ</small>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <%= render "finance/empty", title: "ยังไม่มีข้อมูลงานก่อสร้าง", description: "เพิ่มรายการ BOQ แล้วบันทึกความคืบหน้าที่แต่ละรายการ" %>
+      <% end %>
+    </div>
   </div>
-  <div class="finance-card progress-categories">
-    <div class="progress-card-heading"><div><p class="eyebrow">PROGRESS BY CATEGORY</p><h3>ความคืบหน้าแยกหมวดงาน</h3></div><%= link_to "อัปเดตผลงาน ↗", master_boq_path(workspace_params), data: { turbo_frame: "workspace_content" }, class: "muted-link" %></div>
-    <% if @progress.categories.any? %><div class="category-chart"><% @progress.categories.each do |category| %><div class="category-progress"><div><strong><%= category[:name] %></strong><b><%= category[:progress] %>%</b></div><div class="category-progress-track" role="progressbar" aria-label="<%= category[:name] %>" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= category[:progress] %>"><span style="width:<%= category[:progress] %>%"></span></div><small>เสร็จแล้ว <%= category[:completed] %> / <%= category[:count] %> รายการ</small></div><% end %></div><% else %><%= render "finance/empty", title: "ยังไม่มีข้อมูลงานก่อสร้าง", description: "เพิ่มรายการ BOQ แล้วบันทึกความคืบหน้าที่แต่ละรายการ" %><% end %>
-    <p class="progress-explanation">ใช้ค่า “ความคืบหน้า (%)” ของรายการ BOQ แยกจากยอดวัสดุที่ใช้และค่าแรงที่จ่าย</p>
-  </div>
+
+  <p class="ov-card-foot">ถ่วงน้ำหนักด้วยงบ BOQ (ถ้ายังไม่มีงบ ใช้ค่าเฉลี่ย) · ใช้ค่า “ความคืบหน้า (%)” ของรายการ BOQ แยกจากยอดเบิกจ่าย</p>
 </section>

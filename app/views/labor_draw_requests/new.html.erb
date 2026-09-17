@@ -5,23 +5,34 @@
 <div class="finance-card contractor-card">
   <%= form_with url: new_labor_draw_request_path, method: :get, data: { turbo_frame: "labor-items", controller: "labor-picker", action: "change->labor-picker#change turbo:frame-load@document->labor-picker#loaded turbo:before-stream-render@document->labor-picker#saved" } do |f| %>
     <%= f.hidden_field :project_id, value: @nav_project&.id %><%= f.hidden_field :house_plan_id, value: @nav_plan&.id %>
-    <%= f.label :contractor_name, "1. เลือกช่าง / ผู้รับเหมา" %>
-    <%= f.select :contractor_name, @contractors, { selected: @draw.contractor_name, include_blank: @contractors.empty? ? "ยังไม่มีช่างในแปลนนี้" : false }, data: { labor_picker_target: "select" } %>
+    <%= f.label :contractor_id, "1. เลือกช่าง / ผู้รับเหมา" %>
+    <%= f.select :contractor_id, @contractors.map { |c| [ c.display_label, c.id ] }, { selected: @draw.contractor_id, include_blank: @contractors.empty? ? "ยังไม่มีช่างในแปลนนี้" : false }, data: { labor_picker_target: "select" } %>
     <span class="picker-saving" data-labor-picker-target="loading" role="status" hidden>กำลังโหลดรายการงาน…</span>
   <% end %>
   <p><%= @nav_project&.name %><br><strong><%= @nav_plan&.name %></strong></p>
 </div>
 <%= turbo_frame_tag "labor-items" do %>
   <div id="budget_warnings"></div><div id="finance-form">
-  <% if @items.any? %>
+  <% if @draw.contractor %>
+    <div class="ct-payee <%= 'is-missing' unless @draw.contractor.bank_ready? %>">
+      <span class="ov-kpi-icon <%= @draw.contractor.bank_ready? ? 'blue' : 'amber' %>"><%= ui_icon(:bank, css: "size-5") %></span>
+      <div class="ct-payee-main"><small>โอนเงินเข้าบัญชี</small>
+        <% if @draw.contractor.bank_ready? %><strong><%= @draw.contractor.bank_account_name %> · <%= bank_account_display(@draw.contractor.bank_account_number) %></strong><span><%= @draw.contractor.bank_name %><%= " · #{@draw.contractor.trade}" if @draw.contractor.trade %></span>
+        <% else %><strong>ช่างคนนี้ยังไม่มีบัญชีรับเงินในทะเบียน</strong><span>ต้องให้ Admin เพิ่มธนาคาร เลขบัญชี และชื่อบัญชีก่อน จึงจะส่งใบเบิกได้</span><% end %>
+      </div>
+      <% add_bank = policy(@draw.contractor).update? && !@draw.contractor.bank_ready? %>
+      <%= link_to add_bank ? "เพิ่มบัญชี ↗" : "ประวัติรับเงิน ↗", add_bank ? edit_contractor_path(@draw.contractor) : contractor_path(@draw.contractor), class: "ov-link", data: { turbo_frame: "_top" } %>
+    </div>
+  <% end %>
+  <% if @items.any? && @draw.contractor&.bank_ready? %>
     <%= form_with model: @draw, url: labor_draw_requests_path, method: :post, class: "finance-card labor-form",
       data: { controller: "labor-form", labor_form_admin_value: current_user.admin?, action: "input->labor-form#calculate", turbo_frame: "_top" } do |f| %>
       <% if @error %><div class="alert" role="alert"><%= @error %></div><% end %>
       <%= render "shared/form_errors", record: @draw %>
       <%= f.hidden_field :project_id, value: @nav_project&.id %><%= f.hidden_field :house_plan_id, value: @nav_plan&.id %>
-      <%= f.hidden_field :contractor_name %><%= f.hidden_field :submission_key %>
+      <%= f.hidden_field :contractor_id %><%= f.hidden_field :submission_key %>
       <div class="finance-card-heading">
-        <div><h3>2. ใส่ยอดเบิกของ <%= @draw.contractor_name %></h3></div>
+        <div><h3>2. ใส่ยอดเบิกของ <%= @draw.contractor&.full_name %></h3></div>
         <div class="labor-date"><%= f.label :request_date, "วันที่เบิก" %><%= f.date_field :request_date, required: true %></div>
       </div>
       <% if current_user.admin? %><div class="role-notice"><%= ui_icon(:check, css: "size-4") %><span><strong>Admin เบิกได้ทันที</strong> เมื่อบันทึก ระบบอนุมัติและหักยอด BOQ ให้ในครั้งเดียว</span></div><% end %>
@@ -60,6 +71,8 @@
         <div class="labor-submit-actions"><button type="button" class="text-action" data-action="labor-form#clear" data-labor-form-target="clear" disabled>ล้างยอดที่กรอก</button><%= render "submit" %></div>
       </div>
     <% end %>
+  <% elsif @items.any? %>
+    <div class="finance-card"><%= render "finance/empty", title: "ยังเบิกไม่ได้ — ไม่มีบัญชีรับเงิน", description: "เพิ่มบัญชีธนาคารของช่างในทะเบียนช่าง แล้วกลับมาเบิกค่าแรงอีกครั้ง" %><p class="ct-waiting">งานที่รอเบิก: <% @items.each do |item| %><span class="count-chip"><%= item.code %> · <%= item.name %></span> <% end %></p><div class="empty-actions"><%= link_to "เปิดทะเบียนช่าง", contractor_path(@draw.contractor), class: "btn btn-primary", data: { turbo_frame: "_top" } %></div></div>
   <% else %>
     <div class="finance-card"><%= render "finance/empty", title: "ยังไม่มีงานของช่างคนนี้", description: "กำหนดชื่อช่างให้รายการใน BOQ แล้วกลับมาเบิกค่าแรงได้เลย" %><div class="empty-actions"><%= link_to "ไปกำหนดช่างใน BOQ", master_boq_path(workspace_params), class: "btn btn-primary", data: { turbo_frame: "workspace_content" } %></div></div>
   <% end %>

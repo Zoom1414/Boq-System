@@ -39,6 +39,8 @@
         <% if current_user.project_engineer? || current_user.admin? %><%= workspace_nav "เบิกจ่ายค่าแรง (DV)", new_labor_draw_request_path(workspace_params), controller_name == "labor_draw_requests" && %w[new create].include?(action_name), :plus %><% end %>
         <%= workspace_nav "ประวัติเบิกค่าแรง", labor_draw_requests_path(workspace_params), controller_name == "labor_draw_requests" && action_name == "index", :wallet %>
         <%= workspace_nav "คำขอรออนุมัติ", approvals_path(workspace_params), controller_name == "approvals", :check %>
+        <p>ทะเบียน</p>
+        <%= workspace_nav "ช่าง / ผู้รับเหมาช่วง", contractors_path, controller_name == "contractors", :users %>
       </nav>
     </div>
     <div class="workspace-user sidebar-content"><span class="boq-avatar"><%= current_user.name.first %></span><div><strong><%= current_user.name %></strong><small><%= ApplicationHelper::ROLE_LABELS[current_user.role] %></small></div><%= button_to destroy_user_session_path, method: :delete, aria: { label: "ออกจากระบบ" } do %><%= ui_icon(:logout, css: "size-4") %><% end %></div>

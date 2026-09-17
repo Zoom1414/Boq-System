@@ -1,0 +1,33 @@
+<%= form_with model: contractor, class: "finance-card ct-form", data: { turbo_frame: "workspace_content" } do |f| %>
+  <div class="ct-form-body">
+    <%= render "shared/form_errors", record: contractor %>
+    <fieldset class="ct-fieldset">
+      <legend><span class="ov-kpi-icon gold"><%= ui_icon(:users, css: "size-4") %></span> ข้อมูลช่าง</legend>
+      <div class="form-grid">
+        <div><%= f.label :first_name, "ชื่อ / ชื่อทีมช่าง *" %><%= f.text_field :first_name, required: true, autofocus: contractor.new_record?, placeholder: "เช่น สมชาย หรือ ทีมช่างปูนเจริญ" %></div>
+        <div><%= f.label :last_name, "นามสกุล" %><%= f.text_field :last_name, placeholder: "เว้นว่างได้ถ้าเป็นทีมหรือบริษัท" %></div>
+        <div><%= f.label :trade, "ประเภทช่าง" %><%= f.text_field :trade, list: "contractor-trades", placeholder: "เช่น ช่างปูน, ช่างไฟฟ้า, ผู้รับเหมาช่วง" %>
+          <datalist id="contractor-trades"><% Contractor.where.not(trade: nil).distinct.order(:trade).pluck(:trade).each do |trade| %><option value="<%= trade %>"><% end %></datalist></div>
+        <div><%= f.label :phone, "เบอร์โทร" %><%= f.telephone_field :phone, placeholder: "08x-xxx-xxxx" %></div>
+      </div>
+    </fieldset>
+    <fieldset class="ct-fieldset">
+      <legend><span class="ov-kpi-icon blue"><%= ui_icon(:bank, css: "size-4") %></span> บัญชีรับเงินค่าแรง</legend>
+      <div class="form-grid">
+        <div class="sm:col-span-2"><%= f.label :bank_name, "ธนาคาร" %><%= f.select :bank_name, Contractor::BANKS, include_blank: "เลือกธนาคาร" %></div>
+        <div><%= f.label :bank_account_number, "เลขบัญชี / พร้อมเพย์" %><%= f.text_field :bank_account_number, value: contractor.bank_account_number && format_bank_account(contractor.bank_account_number), inputmode: "numeric", autocomplete: "off", placeholder: "xxx-x-xxxxx-x" %><p class="form-hint">ใส่ขีดหรือเว้นวรรคได้ ระบบเก็บเฉพาะตัวเลข 10–15 หลัก</p></div>
+        <div><%= f.label :bank_account_name, "ชื่อบัญชี" %><%= f.text_field :bank_account_name, placeholder: "ชื่อตามหน้าสมุดบัญชี" %></div>
+      </div>
+      <p class="ct-guard"><%= ui_icon(:lock, css: "size-4") %><span>เลขบัญชีหนึ่งเลขผูกกับช่างได้เพียงคนเดียว ระบบจะไม่ให้บันทึกถ้าเลขซ้ำกับช่างคนอื่น ยอดใน DV จะใช้บัญชี ณ วันที่ขอเบิก</span></p>
+    </fieldset>
+    <fieldset class="ct-fieldset">
+      <legend><span class="ov-kpi-icon purple"><%= ui_icon(:grid, css: "size-4") %></span> อื่น ๆ</legend>
+      <%= f.label :note, "หมายเหตุ" %><%= f.text_area :note, rows: 3, placeholder: "เช่น ขอบเขตงาน เงื่อนไขการจ่ายงวด" %>
+      <% if contractor.persisted? %><label class="check-label mt-4"><%= f.check_box :active %> ใช้งานอยู่ (ปิดเพื่อซ่อนจากการเลือกช่างใน BOQ)</label><% end %>
+    </fieldset>
+  </div>
+  <div class="finance-footer ct-form-actions">
+    <%= link_to "ยกเลิก", contractor.persisted? ? contractor_path(contractor) : contractors_path, class: "btn btn-secondary", data: { turbo_frame: "workspace_content" } %>
+    <%= f.submit contractor.new_record? ? "บันทึกช่าง" : "บันทึกการแก้ไข", class: "btn btn-primary", data: { turbo_submits_with: "กำลังบันทึก…" } %>
+  </div>
+<% end %>

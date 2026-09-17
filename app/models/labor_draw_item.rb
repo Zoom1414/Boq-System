@@ -29,7 +29,7 @@ class LaborDrawItem < ApplicationRecord
   end
 
   def contractor_matches_item
-    if boq_item && labor_draw_request && boq_item.contractor_name != labor_draw_request.contractor_name
+    if boq_item && labor_draw_request && !labor_draw_request.assigned_to?(boq_item)
       errors.add(:boq_item, "must be assigned to the selected contractor")
     end
   end
