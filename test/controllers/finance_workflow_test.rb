@@ -268,11 +268,22 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
   end
 
   test "dashboard charts use actual work progress" do
-    @item.update!(progress_percentage: 65)
+    @item.balance_update_in_progress = true
+    @item.update!(material_used_qty: 6.5)
     get dashboard_path, params: @context
     assert_response :success
     assert_select "#progress-chart-title", text: /65.0%/
     assert_select "[role='progressbar'][aria-valuenow='65.0']"
+  end
+
+  test "dashboard shows the whole project by default and one plan when selected" do
+    get dashboard_path, params: { project_id: @project.id }
+    assert_response :success
+    assert_select ".ov-scope-tab.is-active", text: /ทั้งโครงการ/
+    assert_select ".ov-plans"
+    get dashboard_path, params: @context
+    assert_select ".ov-scope-tab.is-active", text: /#{@plan.name}/
+    assert_select ".ov-plans", count: 0
   end
 
   private

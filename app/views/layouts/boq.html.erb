@@ -11,7 +11,7 @@
 <body>
 <div class="boq-shell workspace-shell" data-controller="boq workspace-navigation" data-action="turbo:frame-load->workspace-navigation#loaded">
   <aside class="boq-sidebar" data-workspace-navigation-target="sidebar" data-action="scroll->workspace-navigation#rememberScroll">
-    <%= link_to dashboard_path(workspace_params), class: "boq-brand brand" do %><span class="brand-mark"><%= ui_icon(:building) %></span><span class="sidebar-content">SITEWORK<small>CONSTRUCTION MANAGEMENT</small></span><% end %>
+    <%= link_to dashboard_path(project_id: @nav_project&.id), class: "boq-brand brand" do %><span class="brand-mark"><%= ui_icon(:building) %></span><span class="sidebar-content">SITEWORK<small>CONSTRUCTION MANAGEMENT</small></span><% end %>
     <button class="boq-collapse" data-action="boq#toggleSidebar" aria-label="ยุบหรือขยายเมนู">« <span class="sidebar-content">ยุบเมนู</span></button>
     <div class="sidebar-content">
       <section class="boq-sidebar-section workspace-context">
@@ -27,7 +27,7 @@
       </section>
       <nav class="workspace-nav" aria-label="เมนูหลัก">
         <p>พื้นที่ทำงาน</p>
-        <%= workspace_nav "ภาพรวม", dashboard_path(workspace_params), controller_name == "dashboard" %>
+        <%= workspace_nav "ภาพรวม", dashboard_path(project_id: @nav_project&.id), controller_name == "dashboard" %>
         <%= workspace_nav "Master BOQ", master_boq_path(workspace_params), controller_name == "master_boqs", :wallet %>
         <%= workspace_nav "โครงการและแปลนบ้าน", projects_path, %w[projects house_plans].include?(controller_name), :building %>
         <p>จัดซื้อ / จัดจ้าง</p>

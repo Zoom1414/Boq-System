@@ -27,6 +27,26 @@ class BoqItem < ApplicationRecord
         .sum("ROUND(po_items.quantity * po_items.labor_unit_price, 2)")
   end
 
+  # % complete = materials used ÷ BOQ quantity. Labor-only rows (no quantity) use labor paid ÷ labor budget.
+  def completion_percentage
+    ratio = if material_quantity.to_d.positive?
+      material_used_qty.to_d / material_quantity.to_d
+    elsif labor_total.to_d.positive?
+      labor_paid_amount.to_d / labor_total.to_d
+    else
+      0
+    end
+    (ratio * 100).round(1)
+  end
+
+  def capped_completion
+    completion_percentage.clamp(0, 100)
+  end
+
+  def completed?
+    completion_percentage >= 100
+  end
+
   def pending_material_quantity
     po_items.joins(:purchase_order).where(purchase_orders: { status: "pending_pu" }).sum(:quantity)
   end

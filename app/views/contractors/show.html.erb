@@ -64,7 +64,7 @@
             <td class="number"><%= number_with_precision(job.labor_total, precision: 2, delimiter: ",") %></td>
             <td class="number green-text"><%= number_with_precision(job.labor_paid_amount, precision: 2, delimiter: ",") %></td>
             <td class="number strong"><%= number_with_precision(job.labor_remaining_amount, precision: 2, delimiter: ",") %></td>
-            <td><div class="ct-progress"><span style="width:<%= job.progress_percentage %>%"></span></div><small><%= job.progress_percentage %>%</small></td>
+            <td><div class="ct-progress"><span style="width:<%= job.capped_completion %>%"></span></div><small><%= job.completion_percentage %>%</small></td>
           </tr>
         <% end %>
       </tbody>

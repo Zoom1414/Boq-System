@@ -1,39 +1,27 @@
-<div id="boq-worksheet" class="boq-table-scroll" data-boq-target="worksheet">
+<div id="boq-worksheet" class="boq-table-scroll <%= 'is-inline-editable' if @master && policy(@master).update? %>" data-boq-target="worksheet" data-controller="boq-inline">
   <table class="boq-table">
-    <colgroup><col style="width:44px"><col style="width:80px"><col style="width:300px"><col style="width:60px"><col span="10" style="width:100px"><col style="width:64px"><col style="width:130px"><col style="width:180px"></colgroup>
+    <colgroup><col style="width:44px"><col style="width:80px"><col style="width:300px"><col style="width:60px"><col span="10" style="width:100px"><col style="width:112px"><col style="width:150px"><col style="width:180px"></colgroup>
     <thead>
-      <tr><th rowspan="2">#</th><th rowspan="2">Code</th><th rowspan="2" class="boq-name">รายการ</th><th rowspan="2">หน่วย</th><th colspan="6">วัสดุ (Material)</th><th colspan="4">ค่าแรง (Labor)</th><th rowspan="2">%</th><th rowspan="2">ผู้รับเหมา</th><th rowspan="2">หมายเหตุ</th></tr>
+      <tr><th rowspan="2">#</th><th rowspan="2">Code</th><th rowspan="2" class="boq-name">รายการ</th><th rowspan="2">หน่วย</th><th colspan="6">วัสดุ (Material)</th><th colspan="4">ค่าแรง (Labor)</th><th rowspan="2" title="วัสดุที่ใช้แล้ว ÷ ปริมาณตาม BOQ">% เสร็จ</th><th rowspan="2">ผู้รับเหมา</th><th rowspan="2">หมายเหตุ</th></tr>
       <tr><th>ปริมาณ</th><th title="จำนวนใน PO ที่รออนุมัติ">รอ PO</th><th>ราคา</th><th>รวม</th><th>ใช้</th><th>เหลือ (จำนวน)</th><th>ราคา</th><th>รวม</th><th>จ่าย</th><th>เหลือ</th></tr>
     </thead>
-    <tbody><tr class="boq-master-row"><td>1</td><td colspan="16">⌄ <%= @house_plan&.name || "Master BOQ" %></td></tr></tbody>
+    <% editable = @master && policy(@master).update? %>
+    <% contractors = editable ? Contractor.active.or(Contractor.where(id: @categories.flat_map { |c| c.boq_items.map(&:contractor_id) }.compact)).order(:full_name).to_a : [] %>
+    <tbody><tr class="boq-master-row"><td>1</td><td colspan="13">⌄ <%= @house_plan&.name || "Master BOQ" %></td><td class="boq-pct-cell"><%= boq_progress_cell(BoqProgressSummary.percentage(@categories.flat_map(&:boq_items)), id: "boq-master-progress") %></td><td colspan="2"></td></tr></tbody>
     <% row_number = 1 %>
     <% @categories.each do |category| %>
       <tbody id="boq-category-<%= category.id %>" data-boq-target="category" data-category-name="<%= category.name %>">
         <tr class="boq-category-row">
-          <td><%= row_number += 1 %></td><td colspan="16">
+          <td><%= row_number += 1 %></td><td colspan="13">
             <button class="boq-category-toggle" data-action="boq#toggleCategory" aria-expanded="true"><span data-chevron>⌄</span><%= category.name %><small><%= category.boq_items.size %> รายการ</small></button>
-            <% if policy(@master).update? %><%= link_to "แก้ไขหมวด", edit_master_boq_boq_category_path(@master, category), class: "boq-category-edit", data: { turbo_frame: "boq_editor" } %><% end %>
+            <% if editable %><%= link_to "แก้ไขหมวด", edit_master_boq_boq_category_path(@master, category), class: "boq-category-edit", data: { turbo_frame: "boq_editor" } %><% end %>
           </td>
+          <td class="boq-pct-cell"><%= boq_progress_cell(BoqProgressSummary.percentage(category.boq_items.to_a), id: "boq-category-#{category.id}-progress") %></td><td colspan="2"></td>
         </tr>
         <% category.boq_items.sort_by(&:id).each do |item| %>
-          <tr class="boq-item-row" data-item-row data-search="<%= [category.name, item.code, item.name, item.contractor_name, item.note].join(' ').downcase %>">
-            <td class="boq-row-number"><%= row_number += 1 %></td><td class="boq-code"><%= item.code %></td>
-            <td class="boq-name"><% if policy(@master).update? %><%= link_to item.name, edit_master_boq_boq_item_path(@master, item), data: { turbo_frame: "boq_editor" }, title: "แก้ไขรายการ" %><% else %><%= item.name %><% end %></td>
-            <td class="boq-unit"><%= item.unit %></td>
-            <td class="boq-numeric"><%= number_with_precision(item.material_quantity, precision: 4, strip_insignificant_zeros: true, delimiter: ",") %></td>
-            <td class="boq-numeric boq-red"><%= number_with_precision(@pending_quantities[item.id] || 0, precision: 4, strip_insignificant_zeros: true, delimiter: ",") %></td>
-            <td class="boq-numeric"><%= number_with_precision(item.material_unit_price, precision: 2, delimiter: ",") %></td>
-            <td class="boq-numeric boq-total"><%= number_with_precision(item.material_total, precision: 2, delimiter: ",") %></td>
-            <td class="boq-numeric boq-red"><%= number_with_precision(item.material_used_qty, precision: 4, strip_insignificant_zeros: true, delimiter: ",") %></td>
-            <td class="boq-numeric <%= item.material_remaining_qty.negative? ? 'boq-red' : 'boq-positive' %>"><%= number_with_precision(item.material_remaining_qty, precision: 4, strip_insignificant_zeros: true, delimiter: ",") %></td>
-            <td class="boq-numeric"><%= number_with_precision(item.labor_unit_price, precision: 2, delimiter: ",") %></td>
-            <td class="boq-numeric boq-total"><%= number_with_precision(item.labor_total, precision: 2, delimiter: ",") %></td>
-            <td class="boq-numeric boq-red"><%= number_with_precision(item.labor_paid_amount, precision: 2, delimiter: ",") %></td>
-            <td class="boq-numeric <%= item.labor_remaining_amount.negative? ? 'boq-red' : 'boq-positive' %>"><%= number_with_precision(item.labor_remaining_amount, precision: 2, delimiter: ",") %></td>
-            <td class="boq-numeric text-slate-400"><%= item.progress_percentage %>%</td><td><%= item.contractor_name %></td><td><%= item.note %></td>
-          </tr>
+          <%= render "master_boqs/item_row", item: item, row_number: (row_number += 1), editable: editable, contractors: contractors %>
         <% end %>
-        <% if category.boq_items.empty? %><tr data-empty-category><td></td><td colspan="16" class="boq-empty-category">ยังไม่มีรายการในหมวดนี้ — กด “เพิ่มรายการ” เพื่อเริ่มต้น</td></tr><% end %>
+        <% if category.boq_items.empty? %><tr data-empty-category><td></td><td colspan="16" class="boq-empty-category">ยังไม่มีรายการในหมวดนี้<%= " — กด “เพิ่มรายการ” เพื่อเริ่มต้น" if editable %></td></tr><% end %>
       </tbody>
     <% end %>
     <% if @categories.empty? %>
@@ -44,7 +32,7 @@
         <% else %><h2>พร้อมเริ่มจัดทำบัญชีปริมาณงาน</h2><p>กด “เพิ่มหมวด” เพื่อจัดกลุ่มงาน หรือ Import ไฟล์ CSV</p><% end %>
       </td></tr></tbody>
     <% end %>
-    <tfoot><tr><td colspan="7" class="boq-name">รวมงบประมาณ Master BOQ</td><td class="boq-numeric"><%= number_with_precision(@master&.total_material_budget || 0, precision: 2, delimiter: ",") %></td><td colspan="3"></td><td class="boq-numeric"><%= number_with_precision(@master&.total_labor_budget || 0, precision: 2, delimiter: ",") %></td><td colspan="5"></td></tr></tfoot>
+    <%= render "master_boqs/totals" %>
   </table>
   <p class="boq-no-results" data-boq-target="noResults" hidden>ไม่พบรายการที่ตรงกับคำค้น</p>
 </div>

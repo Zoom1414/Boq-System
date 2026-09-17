@@ -115,3 +115,16 @@
   .ov-progress-body { padding:4px 18px 18px; }
   .ov-card-foot { padding:12px 18px; }
 }
+
+/* Scope tabs: whole project / each house plan */
+.ov-scope { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:-4px; }
+.ov-scope-tab { display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:999px; border:1px solid #e1e7ef; background:white; color:#5b6f86; font-size:13px; font-weight:600; transition:background .15s,border-color .15s,color .15s; }
+.ov-scope-tab span { font-size:11px; font-weight:500; color:#98a5b6; }
+.ov-scope-tab:hover { border-color:#cfd9e6; color:#243850; }
+.ov-scope-tab.is-active { background:#1c2f45; border-color:#1c2f45; color:white; }
+.ov-scope-tab.is-active span { color:#b9c8d8; }
+.ov-plans td small { display:block; font-size:10px; color:#98a5b6; margin-top:5px; font-weight:400; }
+.ov-plan-bar { width:140px; height:7px; border-radius:7px; background:#eef2f7; overflow:hidden; }
+.ov-plan-bar span { display:block; height:100%; border-radius:7px; background:#5b82c4; }
+.ov-plan-bar.gold span { background:linear-gradient(90deg,#efcf8a,#d4a744); }
+.ov-plan-bar.is-over span { background:#e0604f; }

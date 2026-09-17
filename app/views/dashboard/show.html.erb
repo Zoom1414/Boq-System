@@ -2,13 +2,26 @@
 <% remaining = @budget - @spent %>
 <div class="ov">
 
+  <%# ── Scope: whole project or one house plan ── %>
+  <% if @nav_project && @plans.any? %>
+  <nav class="ov-scope" aria-label="เลือกขอบเขตภาพรวม">
+    <%= link_to dashboard_path(project_id: @nav_project.id), class: "ov-scope-tab #{'is-active' unless @plan_view}", aria: { current: @plan_view ? nil : "page" }, data: { turbo_frame: "workspace_content" } do %><%= ui_icon(:building, css: "size-4") %> ทั้งโครงการ <span><%= @plans.size %> แปลน</span><% end %>
+    <% @plans.each do |plan| %>
+      <% active = @plan_view && plan.id == @nav_plan.id %>
+      <%= link_to dashboard_path(project_id: @nav_project.id, house_plan_id: plan.id), class: "ov-scope-tab #{'is-active' if active}", aria: { current: active ? "page" : nil }, data: { turbo_frame: "workspace_content" } do %><%= ui_icon(:home, css: "size-4") %> <%= plan.name %><% end %>
+    <% end %>
+  </nav>
+  <% end %>
+
   <%# ── Hero: project + budget usage ── %>
   <section class="ov-hero">
     <div class="ov-hero-main">
-      <p class="ov-eyebrow">PROJECT OVERVIEW<% if @nav_project&.code.present? %> · <%= @nav_project.code %><% end %></p>
+      <p class="ov-eyebrow"><%= @plan_view ? "HOUSE PLAN OVERVIEW" : "PROJECT OVERVIEW" %><% if @nav_project&.code.present? %> · <%= @nav_project.code %><% end %></p>
       <h2><%= @nav_project&.name || "ยินดีต้อนรับสู่ SITEWORK" %></h2>
       <p class="ov-hero-sub">
-        <% if @nav_plan %><%= ui_icon(:home, css: "size-4") %> แปลน <%= @nav_plan.name %><% else %>เริ่มต้นด้วยการสร้างโครงการและแปลนบ้านของคุณ<% end %>
+        <% if @plan_view %><%= ui_icon(:home, css: "size-4") %> แปลน <%= @nav_plan.name %>
+        <% elsif @nav_project %><%= ui_icon(:building, css: "size-4") %> ภาพรวมทั้งโครงการ · <%= @plans.size %> แปลนบ้าน · <%= @masters.size %> Master BOQ
+        <% else %>เริ่มต้นด้วยการสร้างโครงการและแปลนบ้านของคุณ<% end %>
       </p>
       <div class="ov-hero-actions">
         <%= link_to master_boq_path(workspace_params), class: "ov-btn ov-btn-gold", data: { turbo_frame: "workspace_content" } do %><%= ui_icon(:grid, css: "size-4") %> เปิด Master BOQ<% end %>
@@ -16,7 +29,7 @@
       </div>
     </div>
     <div class="ov-hero-budget">
-      <span class="ov-label">งบประมาณ Master BOQ</span>
+      <span class="ov-label"><%= @plan_view ? "งบประมาณ Master BOQ ของแปลน" : "งบประมาณรวมทุกแปลน" %></span>
       <strong class="ov-hero-amount"><%= baht(@budget) %></strong>
       <div class="ov-usage" role="progressbar" aria-label="ใช้งบไปแล้ว" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= [spent_pct, 100].min %>">
         <span class="<%= 'is-over' if spent_pct > 100 %>" style="width:<%= [spent_pct, 100].min %>%"></span>
@@ -75,6 +88,29 @@
       </div>
     </aside>
   </div>
+
+  <%# ── Per-plan breakdown (project view) ── %>
+  <% if @plan_rows.present? %>
+  <section class="ov-card ov-plans">
+    <div class="ov-card-head"><div><p class="ov-eyebrow">BY HOUSE PLAN</p><h3>แยกตามแปลนบ้าน</h3></div><span class="count-chip"><%= @plan_rows.size %> แปลน</span></div>
+    <div class="finance-table-wrap"><table class="finance-table">
+      <thead><tr><th>แปลนบ้าน</th><th class="number">งบประมาณ</th><th>ใช้งบไป</th><th class="number">รออนุมัติ</th><th>ความคืบหน้า (วัสดุที่ใช้)</th><th></th></tr></thead>
+      <tbody>
+        <% @plan_rows.each do |row| %>
+          <% used = budget_share(row[:spent], row[:budget]) %>
+          <tr>
+            <td><strong class="strong"><%= row[:plan].name %></strong><small><%= row[:master] ? "มี Master BOQ" : "ยังไม่มี Master BOQ" %></small></td>
+            <td class="number strong"><%= number_with_precision(row[:budget], precision: 2, delimiter: ",") %></td>
+            <td><div class="ov-plan-bar <%= 'is-over' if used > 100 %>"><span style="width:<%= [used, 100].min %>%"></span></div><small><%= number_with_precision(row[:spent], precision: 2, delimiter: ",") %> · <%= used %>%</small></td>
+            <td class="number"><%= row[:pending].positive? ? tag.span(number_with_precision(row[:pending], precision: 2, delimiter: ","), class: "amber-text") : "—" %></td>
+            <td><div class="ov-plan-bar gold"><span style="width:<%= row[:progress] %>%"></span></div><small><%= row[:progress] %>%</small></td>
+            <td class="workflow-next-action"><%= link_to "ดูแปลนนี้ →", dashboard_path(project_id: @nav_project.id, house_plan_id: row[:plan].id), class: "btn btn-secondary", data: { turbo_frame: "workspace_content" } %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  </section>
+  <% end %>
 
   <%# ── Recent documents ── %>
   <section class="ov-card ov-recent">

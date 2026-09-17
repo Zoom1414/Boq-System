@@ -1,7 +1,7 @@
 <section class="ov-card ov-progress" aria-label="ความคืบหน้างานก่อสร้าง">
   <div class="ov-card-head">
     <div><p class="ov-eyebrow">CONSTRUCTION PROGRESS</p><h3>ความคืบหน้างานก่อสร้าง</h3></div>
-    <%= link_to "อัปเดตผลงาน ↗", master_boq_path(workspace_params), data: { turbo_frame: "workspace_content" }, class: "ov-link" %>
+    <%= link_to "ดู Master BOQ ↗", master_boq_path(workspace_params), data: { turbo_frame: "workspace_content" }, class: "ov-link" %>
   </div>
 
   <div class="ov-progress-body">
@@ -9,7 +9,7 @@
       <div class="ov-ring">
         <svg viewBox="0 0 200 200" role="img" aria-labelledby="progress-chart-title progress-chart-description">
           <title id="progress-chart-title">ความคืบหน้ารวม <%= @progress.overall %>%</title>
-          <desc id="progress-chart-description">คำนวณจากเปอร์เซ็นต์ผลงานใน BOQ ถ่วงน้ำหนักด้วยงบวัสดุและค่าแรง ไม่ใช่สัดส่วนยอดเบิกจ่าย</desc>
+          <desc id="progress-chart-description">คำนวณจากวัสดุที่ใช้แล้วเทียบปริมาณตาม BOQ ถ่วงน้ำหนักด้วยงบวัสดุและค่าแรง</desc>
           <circle class="ov-ring-track" cx="100" cy="100" r="82" />
           <circle class="ov-ring-arc" cx="100" cy="100" r="82" pathLength="100" stroke-dasharray="<%= @progress.overall %> 100" />
         </svg>
@@ -40,5 +40,5 @@
     </div>
   </div>
 
-  <p class="ov-card-foot">ถ่วงน้ำหนักด้วยงบ BOQ (ถ้ายังไม่มีงบ ใช้ค่าเฉลี่ย) · ใช้ค่า “ความคืบหน้า (%)” ของรายการ BOQ แยกจากยอดเบิกจ่าย</p>
+  <p class="ov-card-foot"><%= @plan_view ? "แปลนนี้" : "รวมทุกแปลนในโครงการ (หมวดชื่อเดียวกันรวมกัน)" %> · % เสร็จ = วัสดุที่ใช้แล้ว ÷ ปริมาณตาม BOQ ถ่วงน้ำหนักด้วยงบ</p>
 </section>

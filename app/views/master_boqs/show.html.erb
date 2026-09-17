@@ -8,6 +8,7 @@
         <%= render "category_select" %>
         <%= render "add_item_button" %>
       <% end %>
+      <span id="boq-inline-status" class="boq-inline-status" role="status" aria-live="polite"></span>
       <details class="boq-view-options"><summary class="boq-button">มุมมองและสำรองข้อมูล ▾</summary><div>
         <button type="button" class="boq-button" data-action="boq#expandAll">แสดงทุกหมวด</button>
         <button type="button" class="boq-button" data-action="boq#collapseAll">ย่อทุกหมวด</button>
@@ -16,8 +17,12 @@
       </div></details>
     </div>
   </div>
-  <p class="boq-guide">เริ่มจากเพิ่มหมวดงาน แล้วเพิ่มรายการในหมวด · คลิกชื่อรายการเพื่อแก้ไขและบันทึก</p>
+  <% if @master && policy(@master).update? %>
+    <p class="boq-guide"><b>Admin แก้ไขในตารางได้ทันที</b> · คลิกช่องที่ต้องการ พิมพ์ค่าใหม่ แล้วกด Enter หรือคลิกออก ระบบบันทึกและคำนวณยอดให้อัตโนมัติ · Esc = ยกเลิกช่องนั้น · ⋯ = ฟอร์มเต็ม/ลบรายการ</p>
+  <% else %>
+    <p class="boq-guide">โหมดดูอย่างเดียว · เฉพาะ Admin เท่านั้นที่แก้ไข Master BOQ ได้</p>
+  <% end %>
   <%= render "summary" %>
   <%= render "worksheet" %>
-  <div class="boq-statusbar"><span>คลิกชื่อรายการเพื่อดูหรือแก้ไข · ยอดเงินเป็นบาท</span><span>รอ PO = จำนวนที่รออนุมัติ · ยอดใช้และจ่ายหักเมื่ออนุมัติ</span></div>
+  <div class="boq-statusbar"><span>% เสร็จ = วัสดุที่ใช้แล้ว ÷ ปริมาณตาม BOQ (รายการที่ไม่มีปริมาณใช้ค่าแรงที่จ่าย ÷ งบค่าแรง) · ยอดเงินเป็นบาท</span><span>รอ PO = จำนวนที่รออนุมัติ · ยอดใช้และจ่ายหักเมื่ออนุมัติ</span></div>
 </section>
