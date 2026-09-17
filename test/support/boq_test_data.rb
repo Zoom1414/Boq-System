@@ -4,6 +4,8 @@ module BoqTestData
     @plan = house_plans(:one)
     @admin = User.create!(name: "Admin", email: "admin@example.test", password: "test-password-123", role: :admin)
     @engineer = User.create!(name: "Engineer", email: "engineer@example.test", password: "test-password-123", role: :project_engineer)
+    @contractor = Contractor.create!(first_name: "Team A", trade: "ช่างปูน", bank_name: Contractor::BANKS.first,
+      bank_account_number: "123-4-56789-0", bank_account_name: "Team A")
     @master = MasterBoq.create!(house_plan: @plan)
     @category = @master.boq_categories.create!(name: "Structure", position: 1)
     @item = create_boq_item("CONCRETE")

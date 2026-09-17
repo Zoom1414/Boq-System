@@ -29,11 +29,11 @@ class FinanceController < ApplicationController
   def document_saved(document)
     @document = document
     respond_to do |format|
-      format.html { redirect_to document, notice: "บันทึกคำขอแล้ว รอ Admin อนุมัติ", status: :see_other }
+      format.html { redirect_to document, notice: document.approved? ? "บันทึกเบิกค่าแรงและหักยอด BOQ แล้ว" : "บันทึกคำขอแล้ว รอ Admin อนุมัติ", status: :see_other }
       format.turbo_stream do
         render turbo_stream: [
           turbo_stream.update("finance-form", partial: "finance/saved", locals: { document: document }),
-          helpers.budget_warning_stream(document)
+          document.approved? ? turbo_stream.update("budget_warnings", "") : helpers.budget_warning_stream(document)
         ]
       end
     end

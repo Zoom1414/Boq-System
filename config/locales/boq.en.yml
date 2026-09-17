@@ -1,0 +1,12 @@
+en:
+  activerecord:
+    attributes:
+      boq_item:
+        code: "รหัสรายการ"
+        name: "ชื่อรายการ"
+        unit: "หน่วย"
+        material_quantity: "ปริมาณ"
+        material_unit_price: "ราคาวัสดุ"
+        labor_unit_price: "ค่าแรงต่อหน่วย"
+        contractor: "ผู้รับเหมา"
+        note: "หมายเหตุ"

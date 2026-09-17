@@ -13,11 +13,10 @@
           <div><%= f.label :material_quantity, "ปริมาณตาม BOQ" %><%= f.number_field :material_quantity, step: "0.0001", min: 0, required: true %></div>
           <div><%= f.label :material_unit_price, "ราคาวัสดุต่อหน่วย (บาท)" %><%= f.number_field :material_unit_price, step: "0.01", min: 0, required: true %></div>
           <div><%= f.label :labor_unit_price, "ค่าแรงต่อหน่วย (บาท)" %><%= f.number_field :labor_unit_price, step: "0.01", min: 0, required: true %></div>
-          <div><%= f.label :progress_percentage, "ความคืบหน้า (%)" %><%= f.number_field :progress_percentage, step: "0.01", min: 0, max: 100, required: true %></div>
-          <div class="sm:col-span-2"><%= f.label :contractor_name, "ผู้รับเหมา / ช่าง" %><%= f.text_field :contractor_name %></div>
+          <div class="sm:col-span-2"><%= f.label :contractor_id, "ผู้รับเหมา / ช่าง" %><%= f.select :contractor_id, Contractor.active.or(Contractor.where(id: @item.contractor_id)).order(:full_name).map { |c| [ c.display_label, c.id ] }, include_blank: "— ยังไม่มอบหมาย —" %><p class="form-hint">เลือกจากทะเบียนช่าง · ไม่พบชื่อ? <%= link_to "เปิดทะเบียนช่าง", contractors_path, class: "text-link", data: { turbo_frame: "_top" } %></p></div>
           <div class="sm:col-span-2"><%= f.label :note, "หมายเหตุ" %><%= f.text_area :note, rows: 2 %></div>
         </div>
-        <p class="form-hint mt-5">รวมวัสดุและค่าแรงคำนวณจากปริมาณ × ราคาต่อหน่วย ยอดใช้วัสดุและค่าแรงที่จ่ายจะอัปเดตเมื่อเอกสารได้รับอนุมัติ</p>
+        <p class="form-hint mt-5">รวมวัสดุและค่าแรงคำนวณจากปริมาณ × ราคาต่อหน่วย ยอดใช้วัสดุและค่าแรงที่จ่ายจะอัปเดตเมื่อเอกสารได้รับอนุมัติ · % ความคืบหน้าคำนวณจากวัสดุที่ใช้แล้ว</p>
         <div class="boq-dialog-actions"><button type="button" class="boq-button" data-action="boq-editor#close">ยกเลิก</button><%= f.submit "บันทึกรายการ", class: "boq-button boq-blue" %></div>
       <% end %>
       <% if @item.persisted? %><%= button_to "ลบรายการ", master_boq_boq_item_path(@master, @item), method: :delete, class: "boq-delete", form: { data: { turbo_confirm: "ลบรายการนี้? รายการที่มีเอกสารอ้างอิงจะไม่สามารถลบได้" } } %><% end %>

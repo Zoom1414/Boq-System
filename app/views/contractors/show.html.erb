@@ -1,0 +1,75 @@
+<% can_edit = policy(@contractor).update? %>
+<div class="finance-heading">
+  <div class="ct-title"><span class="ct-avatar ct-avatar-lg"><%= contractor_initials(@contractor) %></span><div><p class="eyebrow">CONTRACTOR PROFILE</p><h2><%= @contractor.full_name %><% unless @contractor.active? %> <span class="section-code">ปิดใช้งาน</span><% end %></h2><p><%= @contractor.trade || "ยังไม่ระบุประเภทช่าง" %><%= " · #{@contractor.phone}" if @contractor.phone %></p></div></div>
+  <div class="ct-head-actions"><%= link_to "← ทะเบียนช่าง", contractors_path, class: "btn btn-secondary", data: { turbo_frame: "workspace_content" } %><% if can_edit %><%= link_to "แก้ไขข้อมูล", edit_contractor_path(@contractor), class: "btn btn-primary", data: { turbo_frame: "workspace_content" } %><% end %></div>
+</div>
+
+<div class="ct-profile-grid">
+  <section class="ct-bank-card <%= 'is-missing' unless @contractor.bank_ready? %>">
+    <div class="ct-bank-top"><span><%= ui_icon(:bank, css: "size-5") %> บัญชีรับเงิน</span><% if @contractor.bank_ready? %><em>พร้อมใช้กับ DV</em><% end %></div>
+    <% if @contractor.bank_ready? %>
+      <strong class="ct-bank-number"><%= bank_account_display(@contractor.bank_account_number) %></strong>
+      <p><%= @contractor.bank_account_name %></p><small><%= @contractor.bank_name %></small>
+    <% else %>
+      <strong class="ct-bank-number">ยังไม่มีข้อมูลบัญชี</strong>
+      <p>ต้องมีธนาคาร เลขบัญชี และชื่อบัญชีครบก่อนจึงจะเบิกค่าแรง (DV) ให้ช่างคนนี้ได้</p>
+      <% if can_edit %><%= link_to "เพิ่มบัญชีรับเงิน →", edit_contractor_path(@contractor), class: "ct-bank-link", data: { turbo_frame: "workspace_content" } %><% end %>
+    <% end %>
+  </section>
+  <section class="ct-kpis">
+    <div class="ov-kpi"><span class="ov-label">รับเงินแล้วรวม</span><strong class="green-text"><%= baht(@paid_total) %></strong><small><%= @approved.size %> งวดที่อนุมัติแล้ว</small></div>
+    <div class="ov-kpi"><span class="ov-label">รออนุมัติ</span><strong><%= baht(@pending_total) %></strong><small><%= @draws.count(&:pending?) %> เอกสาร · ยังไม่จ่าย</small></div>
+    <div class="ov-kpi"><span class="ov-label">งานที่รับ</span><strong><%= @jobs.size %> <em class="ct-unit">งาน</em></strong><small>งบค่าแรงรวม <%= baht(@jobs.sum(&:labor_total)) %></small></div>
+    <% if @contractor.note %><div class="ct-note"><span class="ov-label">หมายเหตุ</span><div class="ct-note-text"><%= simple_format(@contractor.note) %></div></div><% end %>
+  </section>
+</div>
+
+<section class="finance-card mt-6">
+  <div class="ov-card-head"><div><p class="ov-eyebrow">PAYMENT HISTORY</p><h3>ประวัติการรับเงินงวดงาน</h3></div><span class="count-chip"><%= @draws.size %> เอกสาร</span></div>
+  <% if @draws.any? %>
+    <div class="finance-table-wrap"><table class="finance-table">
+      <thead><tr><th>งวด</th><th>เลขที่ DV</th><th>วันที่ขอเบิก</th><th>โครงการ / แปลน</th><th>บัญชีที่รับเงิน</th><th>รายการ</th><th class="number">ยอดเงิน</th><th>สถานะ</th></tr></thead>
+      <tbody>
+        <% installment = @approved.size + 1 %>
+        <% @draws.each do |draw| %>
+          <tr>
+            <td class="ct-installment"><% if draw.approved? %><% installment -= 1 %><span>งวด <%= installment %></span><% else %><span class="ct-muted">—</span><% end %></td>
+            <td><%= link_to draw.dv_number, labor_draw_request_path(draw), class: "document-link", data: { turbo_frame: "workspace_content" } %></td>
+            <td><%= thai_date(draw.request_date) %><% if draw.approved_at %><small>จ่าย <%= thai_date(draw.approved_at.to_date) %></small><% end %></td>
+            <td><%= draw.project.name %><small><%= draw.house_plan.name %></small></td>
+            <td><% if draw.payee_bank_account_number %><%= bank_account_display(draw.payee_bank_account_number) %><small><%= draw.payee_bank_name %></small><% else %><span class="ct-muted">ไม่มีข้อมูล (DV เดิม)</span><% end %></td>
+            <td><span class="count-chip"><%= draw.labor_draw_items.size %> รายการ</span></td>
+            <td class="number strong"><%= number_with_precision(draw.total_requested_amount, precision: 2, delimiter: ",") %></td>
+            <td><%= finance_status(draw) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  <% else %>
+    <%= render "finance/empty", title: "ยังไม่มีประวัติการรับเงิน", description: "เมื่อเบิกค่าแรง (DV) ให้ช่างคนนี้ ประวัติแต่ละงวดจะแสดงที่นี่" %>
+  <% end %>
+</section>
+
+<section class="finance-card mt-6">
+  <div class="ov-card-head"><div><p class="ov-eyebrow">ASSIGNED WORK</p><h3>งานที่รับใน BOQ</h3></div><span class="count-chip"><%= @jobs.size %> งาน</span></div>
+  <% if @jobs.any? %>
+    <div class="finance-table-wrap"><table class="finance-table">
+      <thead><tr><th>รายการงาน</th><th>โครงการ / แปลน</th><th class="number">งบค่าแรง</th><th class="number">จ่ายแล้ว</th><th class="number">คงเหลือ</th><th>ความคืบหน้า</th></tr></thead>
+      <tbody>
+        <% @jobs.each do |job| %>
+          <% plan = job.boq_category.master_boq.house_plan %>
+          <tr>
+            <td class="strong"><%= job.name %><small><%= job.code %> · <%= job.boq_category.name %></small></td>
+            <td><%= plan.project.name %><small><%= plan.name %></small></td>
+            <td class="number"><%= number_with_precision(job.labor_total, precision: 2, delimiter: ",") %></td>
+            <td class="number green-text"><%= number_with_precision(job.labor_paid_amount, precision: 2, delimiter: ",") %></td>
+            <td class="number strong"><%= number_with_precision(job.labor_remaining_amount, precision: 2, delimiter: ",") %></td>
+            <td><div class="ct-progress"><span style="width:<%= job.capped_completion %>%"></span></div><small><%= job.completion_percentage %>%</small></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  <% else %>
+    <%= render "finance/empty", title: "ยังไม่ได้มอบหมายงาน", description: "เลือกช่างคนนี้ในรายการ Master BOQ เพื่อมอบหมายงานและเบิกค่าแรง" %>
+  <% end %>
+</section>

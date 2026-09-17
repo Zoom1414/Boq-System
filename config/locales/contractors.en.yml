@@ -1,0 +1,19 @@
+en:
+  activerecord:
+    models:
+      contractor: "ช่าง / ผู้รับเหมา"
+    attributes:
+      contractor:
+        first_name: "ชื่อ"
+        last_name: "นามสกุล"
+        full_name: "ชื่อ-นามสกุล"
+        trade: "ประเภทช่าง"
+        phone: "เบอร์โทร"
+        bank_name: "ธนาคาร"
+        bank_account_number: "เลขบัญชี"
+        bank_account_name: "ชื่อบัญชี"
+        note: "หมายเหตุ"
+        active: "สถานะใช้งาน"
+      labor_draw_request:
+        contractor: "ช่าง / ผู้รับเหมา"
+        contractor_name: "ช่าง / ผู้รับเหมา"

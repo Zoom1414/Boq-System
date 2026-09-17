@@ -87,6 +87,9 @@ class BoqDomainTest < ActiveSupport::TestCase
     assert_not draw.valid?
     draw.contractor_name = "Team A"
     draw.user = @admin
+    assert draw.valid?
+    @engineer.update!(role: :user)
+    draw.user = @engineer
     assert_not draw.valid?
   end
 

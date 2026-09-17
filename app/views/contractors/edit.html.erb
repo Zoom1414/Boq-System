@@ -1,0 +1,2 @@
+<div class="finance-heading"><div><p class="eyebrow">EDIT CONTRACTOR</p><h2>แก้ไขข้อมูล <%= @contractor.full_name_was || @contractor.full_name %></h2><p>การเปลี่ยนบัญชีมีผลกับ DV ที่ขอเบิกหลังจากนี้ DV เดิมยังแสดงบัญชีที่ใช้ ณ วันที่ขอเบิก</p></div><%= link_to "← กลับ", contractor_path(@contractor), class: "btn btn-secondary", data: { turbo_frame: "workspace_content" } %></div>
+<%= render "form", contractor: @contractor %>

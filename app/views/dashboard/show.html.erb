@@ -1,5 +1,125 @@
-<div class="finance-heading"><div><p class="eyebrow">PROJECT OVERVIEW</p><h2><%= @nav_project&.name || "ยินดีต้อนรับสู่ SITEWORK" %></h2><p><%= @nav_plan ? "สรุปงบประมาณและเอกสารของแปลน #{@nav_plan.name}" : "เริ่มต้นด้วยการสร้างโครงการและแปลนบ้านของคุณ" %></p></div><%= link_to "จัดการโครงการ ↗", projects_path, class: "btn btn-secondary" %></div>
-<div class="dashboard-stats"><div class="dashboard-stat featured"><span>งบประมาณ Master BOQ</span><strong><%= baht((@master&.total_material_budget || 0) + (@master&.total_labor_budget || 0)) %></strong><small>วัสดุ + ค่าแรง ตามแปลน</small><%= ui_icon(:building, css: "stat-watermark") %></div><div class="dashboard-stat"><span>ค่าวัสดุที่อนุมัติ</span><strong><%= baht(@material_spent) %></strong><small class="blue-text">ราคาซื้อจริงจาก PU</small></div><div class="dashboard-stat"><span>ค่าแรงที่อนุมัติ</span><strong><%= baht(@labor_spent) %></strong><small class="purple-text">ค่าแรงจาก PO + DV</small></div><div class="dashboard-stat"><span>ยอดคำขอรออนุมัติ</span><strong><%= baht(@pending_total) %></strong><small class="amber-text">ยังไม่หักจากงบหลัก</small></div></div>
-<div class="dashboard-links"><%= link_to master_boq_path(workspace_params), class: "dashboard-link" do %><span class="document-icon"><%= ui_icon(:grid) %></span><div><h3>ตรวจงบประมาณ</h3><p>Master BOQ · วัสดุและค่าแรง</p></div><span>↗</span><% end %><%= link_to pending_purchase_orders_path(workspace_params), class: "dashboard-link" do %><span class="document-icon blue"><%= ui_icon(:wallet) %></span><div><h3>จัดซื้อ / จัดจ้าง</h3><p>ตรวจราคาและอนุมัติ PU</p></div><span>↗</span><% end %><%= link_to approvals_path(workspace_params), class: "dashboard-link" do %><span class="document-icon purple"><%= ui_icon(:check) %></span><div><h3>ตรวจคำขออนุมัติ</h3><p>เอกสาร PO และ DV</p></div><span>↗</span><% end %></div>
-<div class="section-heading mb-4 mt-8"><h3>เอกสารล่าสุด</h3></div><div class="finance-card"><%= render "finance/document_list", documents: @recent %></div>
-<p class="form-hint mt-4">ยอดใช้จ่ายรวมรายการนอก BOQ ที่อนุมัติแล้ว ส่วนยอดคงเหลือรายรายการดูได้ที่ Master BOQ</p>
+<% spent_pct = budget_share(@spent, @budget) %>
+<% remaining = @budget - @spent %>
+<div class="ov">
+
+  <%# ── Scope: whole project or one house plan ── %>
+  <% if @nav_project && @plans.any? %>
+  <nav class="ov-scope" aria-label="เลือกขอบเขตภาพรวม">
+    <%= link_to dashboard_path(project_id: @nav_project.id), class: "ov-scope-tab #{'is-active' unless @plan_view}", aria: { current: @plan_view ? nil : "page" }, data: { turbo_frame: "workspace_content" } do %><%= ui_icon(:building, css: "size-4") %> ทั้งโครงการ <span><%= @plans.size %> แปลน</span><% end %>
+    <% @plans.each do |plan| %>
+      <% active = @plan_view && plan.id == @nav_plan.id %>
+      <%= link_to dashboard_path(project_id: @nav_project.id, house_plan_id: plan.id), class: "ov-scope-tab #{'is-active' if active}", aria: { current: active ? "page" : nil }, data: { turbo_frame: "workspace_content" } do %><%= ui_icon(:home, css: "size-4") %> <%= plan.name %><% end %>
+    <% end %>
+  </nav>
+  <% end %>
+
+  <%# ── Hero: project + budget usage ── %>
+  <section class="ov-hero">
+    <div class="ov-hero-main">
+      <p class="ov-eyebrow"><%= @plan_view ? "HOUSE PLAN OVERVIEW" : "PROJECT OVERVIEW" %><% if @nav_project&.code.present? %> · <%= @nav_project.code %><% end %></p>
+      <h2><%= @nav_project&.name || "ยินดีต้อนรับสู่ SITEWORK" %></h2>
+      <p class="ov-hero-sub">
+        <% if @plan_view %><%= ui_icon(:home, css: "size-4") %> แปลน <%= @nav_plan.name %>
+        <% elsif @nav_project %><%= ui_icon(:building, css: "size-4") %> ภาพรวมทั้งโครงการ · <%= @plans.size %> แปลนบ้าน · <%= @masters.size %> Master BOQ
+        <% else %>เริ่มต้นด้วยการสร้างโครงการและแปลนบ้านของคุณ<% end %>
+      </p>
+      <div class="ov-hero-actions">
+        <%= link_to master_boq_path(workspace_params), class: "ov-btn ov-btn-gold", data: { turbo_frame: "workspace_content" } do %><%= ui_icon(:grid, css: "size-4") %> เปิด Master BOQ<% end %>
+        <%= link_to projects_path, class: "ov-btn ov-btn-ghost" do %><%= ui_icon(:building, css: "size-4") %> จัดการโครงการ<% end %>
+      </div>
+    </div>
+    <div class="ov-hero-budget">
+      <span class="ov-label"><%= @plan_view ? "งบประมาณ Master BOQ ของแปลน" : "งบประมาณรวมทุกแปลน" %></span>
+      <strong class="ov-hero-amount"><%= baht(@budget) %></strong>
+      <div class="ov-usage" role="progressbar" aria-label="ใช้งบไปแล้ว" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= [spent_pct, 100].min %>">
+        <span class="<%= 'is-over' if spent_pct > 100 %>" style="width:<%= [spent_pct, 100].min %>%"></span>
+      </div>
+      <div class="ov-usage-legend">
+        <span>ใช้ไป <b><%= spent_pct %>%</b></span>
+        <span class="<%= remaining.negative? ? 'is-over' : '' %>"><%= remaining.negative? ? "เกินงบ" : "คงเหลือ" %> <b><%= baht(remaining.abs) %></b></span>
+      </div>
+    </div>
+    <%= ui_icon(:building, css: "ov-hero-watermark") %>
+  </section>
+
+  <%# ── KPI cards ── %>
+  <section class="ov-kpis" aria-label="สรุปยอดเงิน">
+    <div class="ov-kpi">
+      <div class="ov-kpi-head"><span class="ov-kpi-icon blue"><%= ui_icon(:building, css: "size-5") %></span><span class="ov-label">ค่าวัสดุที่อนุมัติ</span></div>
+      <strong><%= baht(@material_spent) %></strong>
+      <div class="ov-mini-bar blue"><span style="width:<%= [budget_share(@material_spent, @material_budget), 100].min %>%"></span></div>
+      <small><%= budget_share(@material_spent, @material_budget) %>% ของงบวัสดุ <%= baht(@material_budget) %></small>
+    </div>
+    <div class="ov-kpi">
+      <div class="ov-kpi-head"><span class="ov-kpi-icon purple"><%= ui_icon(:wallet, css: "size-5") %></span><span class="ov-label">ค่าแรงที่อนุมัติ</span></div>
+      <strong><%= baht(@labor_spent) %></strong>
+      <div class="ov-mini-bar purple"><span style="width:<%= [budget_share(@labor_spent, @labor_budget), 100].min %>%"></span></div>
+      <small><%= budget_share(@labor_spent, @labor_budget) %>% ของงบค่าแรง <%= baht(@labor_budget) %> · PO + DV</small>
+    </div>
+    <%= link_to approvals_path(workspace_params), class: "ov-kpi ov-kpi-link", data: { turbo_frame: "workspace_content" } do %>
+      <div class="ov-kpi-head"><span class="ov-kpi-icon amber"><%= ui_icon(:check, css: "size-5") %></span><span class="ov-label">ยอดคำขอรออนุมัติ</span><% if @pending_count.positive? %><span class="ov-badge"><%= @pending_count %></span><% end %></div>
+      <strong><%= baht(@pending_total) %></strong>
+      <small class="ov-kpi-foot"><%= @pending_count.positive? ? "#{@pending_count} เอกสารรอดำเนินการ · ยังไม่หักจากงบหลัก" : "ไม่มีเอกสารค้างอนุมัติ" %><span>→</span></small>
+    <% end %>
+  </section>
+
+  <%# ── Body: progress (left) + actions (right) ── %>
+  <div class="ov-body">
+    <%= render "progress" %>
+
+    <aside class="ov-side">
+      <% if current_user.admin? || current_user.project_engineer? %>
+      <div class="ov-card">
+        <div class="ov-card-head"><div><p class="ov-eyebrow">QUICK ACTIONS</p><h3>เริ่มทำรายการ</h3></div></div>
+        <div class="ov-actions">
+          <%= link_to new_labor_draw_request_path(workspace_params), class: "ov-action", data: { turbo_frame: "workspace_content" } do %><span class="ov-kpi-icon purple"><%= ui_icon(:wallet) %></span><div><strong>เบิกค่าแรงให้ช่าง</strong><small><%= current_user.admin? ? "เลือกช่าง ใส่ยอด แล้วเบิกได้ทันที" : "เลือกช่าง ใส่ยอด ส่งให้ Admin อนุมัติ" %></small></div><span class="ov-arrow">→</span><% end %>
+          <%= link_to new_purchase_order_path(workspace_params), class: "ov-action", data: { turbo_frame: "workspace_content" } do %><span class="ov-kpi-icon blue"><%= ui_icon(:plus) %></span><div><strong>เปิดใบสั่งซื้อ / จ้าง</strong><small>เลือกรายการจาก BOQ แล้วส่งจัดซื้อ</small></div><span class="ov-arrow">→</span><% end %>
+          <%= link_to approvals_path(workspace_params), class: "ov-action", data: { turbo_frame: "workspace_content" } do %><span class="ov-kpi-icon amber"><%= ui_icon(:check) %></span><div><strong><%= current_user.admin? ? "ตรวจคำขอรออนุมัติ" : "ติดตามสถานะคำขอ" %></strong><small>ดูเอกสารและขั้นตอนถัดไป</small></div><span class="ov-arrow">→</span><% end %>
+        </div>
+      </div>
+      <% end %>
+
+      <div class="ov-card">
+        <div class="ov-card-head"><div><p class="ov-eyebrow">SHORTCUTS</p><h3>ไปยังหน้าหลัก</h3></div></div>
+        <div class="ov-actions">
+          <%= link_to master_boq_path(workspace_params), class: "ov-action", data: { turbo_frame: "workspace_content" } do %><span class="ov-kpi-icon gold"><%= ui_icon(:grid) %></span><div><strong>ตรวจงบประมาณ</strong><small>Master BOQ · วัสดุและค่าแรง</small></div><span class="ov-arrow">↗</span><% end %>
+          <%= link_to pending_purchase_orders_path(workspace_params), class: "ov-action", data: { turbo_frame: "workspace_content" } do %><span class="ov-kpi-icon blue"><%= ui_icon(:wallet) %></span><div><strong>จัดซื้อ / จัดจ้าง</strong><small>ตรวจราคาและอนุมัติ PU</small></div><span class="ov-arrow">↗</span><% end %>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <%# ── Per-plan breakdown (project view) ── %>
+  <% if @plan_rows.present? %>
+  <section class="ov-card ov-plans">
+    <div class="ov-card-head"><div><p class="ov-eyebrow">BY HOUSE PLAN</p><h3>แยกตามแปลนบ้าน</h3></div><span class="count-chip"><%= @plan_rows.size %> แปลน</span></div>
+    <div class="finance-table-wrap"><table class="finance-table">
+      <thead><tr><th>แปลนบ้าน</th><th class="number">งบประมาณ</th><th>ใช้งบไป</th><th class="number">รออนุมัติ</th><th>ความคืบหน้า (วัสดุที่ใช้)</th><th></th></tr></thead>
+      <tbody>
+        <% @plan_rows.each do |row| %>
+          <% used = budget_share(row[:spent], row[:budget]) %>
+          <tr>
+            <td><strong class="strong"><%= row[:plan].name %></strong><small><%= row[:master] ? "มี Master BOQ" : "ยังไม่มี Master BOQ" %></small></td>
+            <td class="number strong"><%= number_with_precision(row[:budget], precision: 2, delimiter: ",") %></td>
+            <td><div class="ov-plan-bar <%= 'is-over' if used > 100 %>"><span style="width:<%= [used, 100].min %>%"></span></div><small><%= number_with_precision(row[:spent], precision: 2, delimiter: ",") %> · <%= used %>%</small></td>
+            <td class="number"><%= row[:pending].positive? ? tag.span(number_with_precision(row[:pending], precision: 2, delimiter: ","), class: "amber-text") : "—" %></td>
+            <td><div class="ov-plan-bar gold"><span style="width:<%= row[:progress] %>%"></span></div><small><%= row[:progress] %>%</small></td>
+            <td class="workflow-next-action"><%= link_to "ดูแปลนนี้ →", dashboard_path(project_id: @nav_project.id, house_plan_id: row[:plan].id), class: "btn btn-secondary", data: { turbo_frame: "workspace_content" } %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  </section>
+  <% end %>
+
+  <%# ── Recent documents ── %>
+  <section class="ov-card ov-recent">
+    <div class="ov-card-head">
+      <div><p class="ov-eyebrow">RECENT DOCUMENTS</p><h3>เอกสารล่าสุด</h3></div>
+      <%= link_to "ประวัติใบสั่งซื้อ ↗", purchase_orders_path(workspace_params), class: "ov-link", data: { turbo_frame: "workspace_content" } %>
+    </div>
+    <%= render "finance/document_list", documents: @recent %>
+  </section>
+
+  <p class="ov-footnote">ยอดใช้จ่ายรวมรายการนอก BOQ ที่อนุมัติแล้ว ส่วนยอดคงเหลือรายรายการดูได้ที่ Master BOQ</p>
+</div>

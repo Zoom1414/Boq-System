@@ -57,7 +57,7 @@ module FinancialDocument
       if row.boq_item.master_boq.house_plan_id != house_plan_id
         errors.add(:base, "All BOQ items must belong to the selected house plan")
       end
-      if is_a?(LaborDrawRequest) && row.boq_item.contractor_name != contractor_name
+      if is_a?(LaborDrawRequest) && !assigned_to?(row.boq_item)
         errors.add(:contractor_name, "must match the contractor assigned to every BOQ item")
       end
     end

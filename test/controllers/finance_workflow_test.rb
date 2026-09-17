@@ -113,10 +113,10 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
 
   test "contractor item frame filters items and invalid empty DV is redisplayed" do
     create_boq_item("OTHER").update!(contractor_name: "Team B")
-    get new_labor_draw_request_path, params: @context.merge(contractor_name: "Team B"), headers: { "Turbo-Frame" => "labor-items" }
+    get new_labor_draw_request_path, params: @context.merge(contractor_id: Contractor.find_by_name("Team B").id), headers: { "Turbo-Frame" => "labor-items" }
     assert_response :success
     assert_select "turbo-frame#labor-items", text: /OTHER/
-    assert_select ".labor-table", text: /CONCRETE/, count: 0
+    assert_select ".labor-entry", text: /CONCRETE/, count: 0
     data = draw_params
     data[:labor_draw_request][:labor_draw_items_attributes]["0"][:requested_amount] = 0
     assert_no_difference "LaborDrawRequest.count" do
@@ -163,11 +163,127 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     end
     sign_in @engineer
     data = draw_params
-    data[:labor_draw_request][:contractor_name] = "Wrong team"
+    data[:labor_draw_request][:contractor_id] = Contractor.create!(first_name: "Wrong team").id
     assert_no_difference "LaborDrawRequest.count" do
       post labor_draw_requests_path, params: data
       assert_response :not_found
     end
+  end
+
+  test "sidebar targets persistent workspace frame with history and rendered active-page metadata" do
+    [ [ dashboard_path, dashboard_path ], [ new_labor_draw_request_path, new_labor_draw_request_path ],
+      [ master_boq_path, master_boq_path ], [ approvals_path, approvals_path ] ].each do |path, active|
+      get path, params: @context, headers: { "Turbo-Frame" => "workspace_content" }
+      assert_response :success
+      assert_select "turbo-frame#workspace_content[data-turbo-action='advance']"
+      assert_select "turbo-frame#workspace_content [data-workspace-page='#{active}']"
+      assert_select ".workspace-nav-link[data-turbo-frame='workspace_content']"
+    end
+  end
+
+  test "Admin submits and approves a labor draw in one action and retry never deducts twice" do
+    sign_in @admin
+    get new_labor_draw_request_path, params: @context
+    assert_response :success
+    assert_select "input[type='submit'][value='บันทึกเบิกค่าแรงทันที']"
+    assert_select ".labor-entry input[type='number'][disabled]", count: 0
+    data = draw_params
+    data[:labor_draw_request][:submission_key] = SecureRandom.uuid
+    assert_difference "LaborDrawRequest.count", 1 do
+      post labor_draw_requests_path, params: data, as: :turbo_stream
+      assert_response :success
+      assert_select ".finance-success", text: /อนุมัติและหักยอด BOQ แล้ว/
+    end
+    draw = LaborDrawRequest.last
+    assert draw.approved?
+    assert_equal @admin.id, draw.user_id
+    assert_equal @admin.id, draw.approved_by_id
+    assert_equal 400, @item.reload.labor_paid_amount
+    assert_no_difference "LaborDrawRequest.count" do
+      post labor_draw_requests_path, params: data, as: :turbo_stream
+      assert_response :success
+    end
+    assert_equal 400, @item.reload.labor_paid_amount
+  end
+
+  test "Admin immediate over-budget draw rolls back completely and can retry with explicit override" do
+    sign_in @admin
+    data = draw_params
+    data[:labor_draw_request][:submission_key] = SecureRandom.uuid
+    data[:labor_draw_request][:labor_draw_items_attributes]["0"][:requested_amount] = 1200
+    assert_no_difference [ "LaborDrawRequest.count", "LaborDrawItem.count" ] do
+      post labor_draw_requests_path, params: data, as: :turbo_stream
+      assert_response :unprocessable_entity
+      assert_select "form[action='#{labor_draw_requests_path}'][method='post']"
+      assert_select "input[data-amount][value='1200.0']"
+    end
+    assert_equal 0, @item.reload.labor_paid_amount
+    assert_difference "LaborDrawRequest.count", 1 do
+      post labor_draw_requests_path, params: data.merge(budget_override: "1", override_reason: "Approved extra work")
+      assert_response :redirect
+    end
+    draw = LaborDrawRequest.last
+    assert draw.approved?
+    assert draw.budget_override?
+    assert_equal "Approved extra work", draw.override_reason
+    assert_equal(-200, @item.reload.labor_remaining_amount)
+  end
+
+  test "Engineer cannot use immediate approval inputs and another user cannot reuse a submission key" do
+    data = draw_params
+    data[:labor_draw_request].merge!(submission_key: SecureRandom.uuid, status: "approved", approved_by_id: @admin.id)
+    post labor_draw_requests_path, params: data.merge(budget_override: "1", override_reason: "Forged approval")
+    assert_response :redirect
+    draw = LaborDrawRequest.last
+    assert draw.pending?
+    assert_nil draw.approved_by_id
+    assert_equal @engineer.id, draw.user_id
+    assert_equal 0, @item.reload.labor_paid_amount
+    sign_in @admin
+    assert_no_difference "LaborDrawRequest.count" do
+      post labor_draw_requests_path, params: data
+      assert_response :forbidden
+    end
+    assert_equal 0, @item.reload.labor_paid_amount
+  end
+
+  test "DV over-budget approval requires override and records Admin note atomically" do
+    post labor_draw_requests_path, params: { labor_draw_request: draw_params[:labor_draw_request].merge(
+      labor_draw_items_attributes: { "0" => { boq_item_id: @item.id, requested_amount: 1200 } }) }, as: :turbo_stream
+    assert_response :success
+    assert_select "turbo-stream[target='budget_warnings']", text: /exceeds the Master BOQ/
+    draw = LaborDrawRequest.order(:id).last
+    sign_in @admin
+    patch approve_labor_draw_request_path(draw), params: { admin_note: "Inspected" }
+    assert_response :unprocessable_entity
+    assert draw.reload.pending?
+    assert_nil draw.admin_note
+    assert_equal 0, @item.reload.labor_paid_amount
+    patch approve_labor_draw_request_path(draw), params: { budget_override: "1", override_reason: "Variation approved", admin_note: "Inspected" }
+    assert_response :redirect
+    assert draw.reload.approved?
+    assert_equal "Inspected", draw.admin_note
+    assert_equal(-200, @item.reload.labor_remaining_amount)
+    assert_equal @admin.id, draw.approved_by_id
+  end
+
+  test "dashboard charts use actual work progress" do
+    @item.balance_update_in_progress = true
+    @item.update!(material_used_qty: 6.5)
+    get dashboard_path, params: @context
+    assert_response :success
+    assert_select "#progress-chart-title", text: /65.0%/
+    assert_select "[role='progressbar'][aria-valuenow='65.0']"
+  end
+
+  test "dashboard shows the whole project by default and one plan when selected" do
+    get dashboard_path, params: { project_id: @project.id }
+    assert_response :success
+    assert_select ".ov-scope-tab.is-active", text: /ทั้งโครงการ/
+    assert_select ".ov-plans"
+    get dashboard_path, params: @context
+    assert_select ".ov-scope-tab.is-active", text: /#{@plan.name}/
+    assert_select ".ov-plans", count: 0
   end
 
   private
@@ -179,7 +295,7 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
   end
 
   def draw_params
-    { labor_draw_request: @context.merge(contractor_name: "Team A", request_date: Date.current, user_id: @admin.id,
+    { labor_draw_request: @context.merge(contractor_id: @contractor.id, request_date: Date.current, user_id: @admin.id,
       labor_draw_items_attributes: { "0" => { boq_item_id: @item.id, requested_amount: 400, unit_price: 1, paid_amount: 900 } }) }
   end
 end

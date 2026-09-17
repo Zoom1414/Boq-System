@@ -1,0 +1,53 @@
+/* Clear actions, readable controls, and progressive disclosure. */
+.workspace-shell { font-size:15px; }
+.workspace-nav-link { font-size:13px; padding:12px 14px; }
+.finance-heading h2 { font-size:26px; }.finance-heading p:not(.eyebrow) { font-size:13px; color:#697c93; }
+.workspace-shell .btn { min-height:44px; }.workspace-shell .btn:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; }
+.workspace-shell .btn-primary,.workspace-shell .btn-dark,.workspace-shell .btn-blue,.workspace-shell .btn-purple { font-weight:650; }
+.finance-table th { font-size:12px; }.finance-table td { font-size:13px; }.finance-table small { font-size:11px; }
+.muted-link { color:#526c8c; font-size:12px; text-decoration:underline; text-underline-offset:3px; }
+.finance-card label,.procurement-dialog label { font-size:13px; color:#4f647e; }
+.finance-card input:not([type=hidden]):not([type=submit]):not([type=checkbox]),.finance-card select { font-size:14px; min-height:44px; }
+.finance-card-heading h3 { font-size:17px; }.finance-card-heading p { font-size:12px; color:#7b8da3; }
+.workflow-steps { display:flex; gap:24px; align-items:center; list-style:none; padding:0; margin:0 0 24px; }
+.workflow-steps li { display:flex; align-items:center; gap:9px; font-size:13px; color:#6b7890; }.workflow-steps li:not(:last-child)::after { content:"›"; color:#bec7d4; margin-left:15px; font-size:19px; }.workflow-steps span { display:grid; place-items:center; width:27px; height:27px; border-radius:50%; background:#eee6f9; color:#885bbc; font-size:12px; font-weight:700; }
+.contractor-card form { max-width:620px; }.contractor-card p { color:#7c8da2; font-size:12px; }
+.picker-saving { display:block; color:#8b67b8; font-size:12px; margin-top:8px; }
+.role-notice { display:flex; align-items:center; gap:10px; padding:13px 24px; background:#f6f2fc; color:#7c6895; font-size:12px; line-height:1.8; }.role-notice strong { color:#7852a5; margin-right:6px; }
+.labor-form { overflow:visible; }.labor-form .finance-card-heading { flex-wrap:wrap; }.labor-form .finance-card-heading input { width:180px !important; }
+.labor-form .finance-card-heading { padding:16px 24px; }
+.labor-date { display:flex; align-items:center; gap:12px; }.labor-date label { margin-bottom:0; white-space:nowrap; }
+.workspace-page:has(.labor-form) { scroll-padding-bottom:180px; }
+.workspace-page:has(#labor-items) .finance-heading { margin-bottom:16px; }
+.workspace-page:has(#labor-items) .contractor-card { padding:16px 24px; margin-bottom:18px; }
+.labor-tools { display:flex; align-items:center; gap:20px; padding:20px 24px; }.labor-tools input { max-width:390px; background:#fafbfd !important; }.labor-tools > span { font-size:12px; color:#8e9db1; white-space:nowrap; }
+.labor-entry-head,.labor-entry { display:grid; grid-template-columns:minmax(240px,2fr) minmax(135px,1fr) minmax(155px,1fr) minmax(135px,1fr); column-gap:22px; }
+.labor-entry-head { background:#f7f9fc; padding:13px 24px; font-size:12px; color:#7c8ba0; border-block:1px solid #e5ebf3; }.labor-entry-head span:not(:first-child) { text-align:right; }.labor-entry-head span:nth-child(3) { color:#8c60b9; }
+.labor-entry { padding:22px 24px; border-bottom:1px solid #edf1f6; align-items:start; }.labor-entry.has-amount { background:#fdfbff; box-shadow:inset 3px 0 #b595d2; }.labor-entry.is-over-budget { box-shadow:inset 3px 0 #d59658; }
+.labor-work > strong { display:block; color:#354d68; font-size:14px; line-height:1.7; }.labor-work > small { display:block; color:#9aa8ba; font-size:11px; margin-top:5px; }
+.labor-work details { margin-top:10px; font-size:11px; color:#798ba3; }.labor-work summary { cursor:pointer; color:#6f86a4; }.labor-work dl { padding-top:9px; }.labor-work dl div { display:flex; justify-content:space-between; flex-wrap:wrap; gap:5px; line-height:1.8; padding:3px 0; }.labor-work dd { font-variant-numeric:tabular-nums; }
+.pending-line { font-size:11px; line-height:1.7; color:#ad8547; margin-top:8px; }
+.labor-available,.labor-after { text-align:right; padding-top:12px; font-size:15px; font-variant-numeric:tabular-nums; }.labor-available strong { color:#50647e; font-weight:600; }.labor-after strong { color:#729285; font-weight:500; }.is-over-budget .labor-after strong,.labor-after small { color:#bc7647; }.labor-after small { display:block; font-size:11px; margin-top:8px; }
+.labor-amount { text-align:right; }.labor-amount input { text-align:right; font-size:17px !important; border-color:#dacbea !important; min-height:46px !important; color:#754da0 !important; border-radius:8px; }.labor-amount input:focus { outline:none; border-color:#976ac3 !important; box-shadow:0 0 0 3px #bda1d82b; }
+.fill-remaining { color:#8768a9; font-size:11px; padding:7px 0 2px 7px; text-decoration:underline; text-underline-offset:3px; }.fill-remaining:hover { color:#593f78; }
+.mobile-field-label { display:none; }.labor-no-matches { color:#8595a9; text-align:center; padding:36px; font-size:13px; }
+.labor-budget-warning { padding:22px 24px; margin:18px 24px; background:#fffbf3; border:1px solid #ecdbbb; border-radius:10px; color:#aa814a; font-size:13px; }.labor-budget-warning p { margin-top:7px; line-height:1.8; font-size:12px; }.labor-budget-warning .check-label { display:flex; align-items:center; gap:10px; margin:16px 0; }.labor-budget-warning input[type=text] { max-width:630px; }
+.labor-submit-bar { display:flex; align-items:center; justify-content:space-between; gap:22px; padding:20px 24px; position:sticky; bottom:0; background:#fff; border-top:1px solid #e6dced; box-shadow:0 -7px 22px #42304e08; border-radius:0 0 14px 14px; z-index:5; }
+.labor-submit-bar > div > span { display:block; font-size:12px; color:#8b7b9e; }.labor-submit-bar > div > strong { display:block; margin-top:4px; font-size:28px; color:#8058aa; font-variant-numeric:tabular-nums; }.labor-submit-bar strong small { margin-left:9px; color:#aa99ba; font-size:12px; font-weight:400; }.labor-submit-bar p { font-size:11px; color:#92849f; margin-top:4px; line-height:1.7; }
+.labor-submit-actions { display:flex; align-items:center; gap:18px; }.text-action { color:#8795a8; font-size:12px; text-decoration:underline; text-underline-offset:3px; }.text-action:disabled { opacity:.35; cursor:not-allowed; }.text-action:hover:not(:disabled) { color:#556e8e; }
+.empty-actions { display:flex; justify-content:center; padding:0 25px 30px; }
+.quick-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-bottom:24px; }.quick-action { display:flex; align-items:center; gap:14px; border:1px solid #e3e8f0; border-radius:12px; padding:19px 21px; background:white; }.quick-action:hover { border-color:#c5b4da; background:#fefcff; }.quick-action strong { display:block; color:#4d627b; font-size:14px; }.quick-action small { display:block; color:#94a1b3; font-size:11px; margin-top:5px; }.quick-action > span:last-child { margin-left:auto; color:#a399b0; }
+.boq-primary-actions { display:flex; align-items:center; gap:9px; margin-left:auto; }.boq-view-options { position:relative; }.boq-view-options summary { list-style:none; }.boq-view-options[open] > div { position:absolute; right:0; top:44px; width:220px; display:grid; gap:8px; padding:12px; background:white; border:1px solid #e1e7ef; border-radius:9px; box-shadow:0 10px 30px #2030491a; z-index:20; }.boq-guide { padding:10px 16px; background:#fcfbf7; font-size:12px; color:#9a8c6c; border-bottom:1px solid #ece7db; }
+.workflow-next-action { white-space:nowrap; }.finance-table .workflow-next-action .btn { font-size:12px; padding:9px 14px; min-height:38px; }
+@media(max-width:1199px) { .labor-entry-head,.labor-entry { grid-template-columns:minmax(200px,1.6fr) 110px 150px 110px; gap:14px; }.labor-entry,.labor-entry-head { padding-inline:20px; }.quick-actions { grid-template-columns:1fr; gap:10px; } }
+@media(max-width:1050px) { .labor-entry-head { display:none; }.labor-entry { grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }.labor-work { grid-column:1 / -1; }.mobile-field-label { display:block; font-size:11px !important; color:#8b99ac; margin-bottom:8px; text-align:left; }.labor-available,.labor-after { text-align:left; padding-top:0; }.labor-amount .mobile-field-label { color:#8c68b0; }.labor-submit-bar { flex-wrap:wrap; }.labor-submit-actions { margin-left:auto; }.boq-primary-actions { flex-wrap:wrap; } }
+@media(max-width:599px) { .workflow-steps { gap:10px; margin-bottom:18px; }.workflow-steps li { font-size:11px; gap:6px; }.workflow-steps span { width:23px; height:23px; flex-shrink:0; }.workflow-steps li:not(:last-child)::after { display:none; }.finance-heading h2 { font-size:22px; }.labor-entry { grid-template-columns:1fr 1fr; padding:20px 16px; }.labor-work { grid-column:1 / -1; }.labor-available { grid-column:1; }.labor-amount { grid-column:2; grid-row:2 / 4; }.labor-after { grid-column:1; }.labor-tools { padding:16px; gap:10px; }.labor-submit-bar { padding:15px 16px; gap:10px; }.labor-submit-bar > div > strong { font-size:24px; }.labor-submit-actions { width:100%; display:grid; grid-template-columns:auto 1fr; gap:14px; }.labor-submit-actions .btn { width:100%; font-size:13px; padding:12px 14px; }.role-notice { padding:12px 16px; align-items:flex-start; }.role-notice svg { flex-shrink:0; margin-top:4px; }.role-notice strong { display:block; }.labor-budget-warning { margin:16px; padding:16px; }.boq-primary-actions { margin-left:0; }.finance-heading .btn { padding:10px 15px; }.quick-action { padding:16px; } }
+.workspace-shell [hidden] { display:none !important; }
+.labor-submit-actions .btn-purple:not(:disabled) { background:#7743b4; color:#fff; }
+.labor-form:not(:has(.labor-entry.has-amount)) .labor-submit-bar { position:static; }
+.labor-submit-actions .btn-purple:not(:disabled):hover { background:#63359a; }
+.labor-work details,.fill-remaining,.labor-submit-bar p,.text-action { font-size:12px; }
+@media(max-width:599px) { .finance-heading.labor-page-heading { flex-direction:row; gap:12px; }.labor-page-heading h2 { font-size:20px; }.labor-page-heading .btn { flex-shrink:0; padding:9px 10px; min-height:36px; font-size:11px; }.labor-page-heading .section-code { display:none; }.labor-date { width:100%; }.labor-form .finance-card-heading .labor-date input { width:auto !important; flex:1; min-width:0; }.labor-form .finance-card-heading { padding:16px; } }
+.purchase-submit-bar { position:sticky; bottom:0; background:white; z-index:5; box-shadow:0 -7px 22px #42304e08; }
+.boq-toolbar { align-items:flex-start; }.boq-primary-actions { flex-wrap:wrap; }
+@media(max-width:700px) { .request-card { flex-wrap:wrap; }.request-card .workflow-next-action { margin-left:auto; font-size:12px; }.purchase-submit-bar { flex-wrap:wrap; gap:12px; } }

@@ -40,8 +40,28 @@ module FinanceHelper
   end
 
   def workspace_nav(label, path, active, icon = :grid)
-    link_to path, class: "workspace-nav-link #{'is-active' if active}", aria: { current: active ? "page" : nil } do
+    link_to path, class: "workspace-nav-link #{'is-active' if active}", aria: { current: active ? "page" : nil },
+      data: { turbo_frame: "workspace_content", workspace_navigation_target: "link" } do
       safe_join([ ui_icon(icon, css: "size-4"), tag.span(label) ])
+    end
+  end
+
+  def workspace_page_path
+    case controller_name
+    when "dashboard" then dashboard_path
+    when "master_boqs", "boq_items", "boq_categories" then master_boq_path
+    when "purchase_orders"
+      case action_name
+      when "new", "create" then new_purchase_order_path
+      when "pending", "procure", "complete" then pending_purchase_orders_path
+      when "history" then history_purchase_orders_path
+      else purchase_orders_path
+      end
+    when "labor_draw_requests"
+      %w[new create].include?(action_name) ? new_labor_draw_request_path : labor_draw_requests_path
+    when "approvals" then approvals_path
+    when "contractors" then contractors_path
+    else projects_path
     end
   end
 end

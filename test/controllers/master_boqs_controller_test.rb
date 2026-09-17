@@ -4,7 +4,7 @@ class MasterBoqsControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   setup do
     setup_boq
-    sign_in @engineer
+    sign_in @admin
   end
 
   test "worksheet shows grouped budgets and scoped project selectors" do
@@ -72,6 +72,7 @@ class MasterBoqsControllerTest < ActionDispatch::IntegrationTest
 
   test "ordinary users can read and export but cannot modify BOQ" do
     @engineer.update!(role: :user)
+    sign_in @engineer
     get master_boq_path
     assert_response :success
     get export_master_boq_path(@master)
@@ -82,12 +83,54 @@ class MasterBoqsControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  test "engineers can view but cannot edit, create or import the Master BOQ" do
+    sign_in @engineer
+    get master_boq_path(project_id: @project.id, house_plan_id: @plan.id)
+    assert_response :success
+    assert_select ".boq-cell-input", count: 0
+    assert_select "a[href='#{new_master_boq_boq_item_path(@master)}']", count: 0
+    patch master_boq_boq_item_path(@master, @item), params: { inline: 1, boq_item: { material_quantity: 99 } }, as: :turbo_stream
+    assert_response :forbidden
+    post master_boq_boq_categories_path(@master), params: { boq_category: { name: "Blocked" } }
+    assert_response :forbidden
+    assert_no_difference "MasterBoq.count" do
+      post create_master_boq_path(house_plans(:two))
+    end
+    assert_response :forbidden
+    assert_equal 10, @item.reload.material_quantity
+  end
+
+  test "admin edits cells inline and computed totals refresh" do
+    get master_boq_path(project_id: @project.id, house_plan_id: @plan.id)
+    assert_select "#boq-item-#{@item.id}-material_quantity.boq-cell-input"
+    patch master_boq_boq_item_path(@master, @item), params: { inline: 1, row_number: 3,
+      boq_item: { material_quantity: 20, lock_version: @item.lock_version, material_used_qty: 5 } }, as: :turbo_stream
+    assert_response :success
+    assert_select "turbo-stream[target='boq-item-#{@item.id}-material_total']", text: /4,000.00/
+    assert_select "turbo-stream[target='boq-item-#{@item.id}-lock']"
+    assert_select "turbo-stream[target='boq-totals']"
+    assert_equal 20, @item.reload.material_quantity
+    assert_equal 0, @item.material_used_qty
+
+    patch master_boq_boq_item_path(@master, @item), params: { inline: 1, row_number: 3,
+      boq_item: { name: "", lock_version: @item.lock_version } }, as: :turbo_stream
+    assert_response :unprocessable_entity
+    assert_select "turbo-stream[target='boq-item-#{@item.id}']"
+    assert_select "turbo-stream[target='boq-inline-status']", text: /ไม่สำเร็จ/
+  end
+
+  test "the percent column shows materials used" do
+    @item.balance_update_in_progress = true
+    @item.update!(material_used_qty: 4)
+    get master_boq_path(project_id: @project.id, house_plan_id: @plan.id)
+    assert_select "#boq-item-#{@item.id}-progress b", text: "40.0%"
+  end
+
   test "items from other masters cannot be edited or assigned" do
     other_master = MasterBoq.create!(house_plan: house_plans(:two))
     other_category = other_master.boq_categories.create!(name: "Other")
     patch master_boq_boq_item_path(other_master, @item), params: { boq_item: { name: "Wrong" } }
     assert_response :not_found
-    sign_in @engineer
     post master_boq_boq_items_path(@master), params: { boq_item: { boq_category_id: other_category.id, code: "Wrong" } }
     assert_response :not_found
   end

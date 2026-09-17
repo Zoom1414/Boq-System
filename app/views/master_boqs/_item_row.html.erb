@@ -1,0 +1,32 @@
+<%# locals: item, row_number, editable, contractors %>
+<% dom = "boq-item-#{item.id}" %>
+<tr id="<%= dom %>" class="boq-item-row <%= 'is-editable' if editable %>" data-item-row data-search="<%= [item.boq_category.name, item.code, item.name, item.contractor_name, item.note].join(' ').downcase %>"<% if editable %> data-url="<%= master_boq_boq_item_path(@master, item) %>" data-row-number="<%= row_number %>"<% end %>>
+  <td class="boq-row-number"><%= row_number %><% if editable %><%= hidden_field_tag "boq_item[lock_version]", item.lock_version, id: "#{dom}-lock", data: { inline_field: true } %><% end %></td>
+  <% if editable %>
+    <td class="boq-code"><%= boq_cell_input(item, :code, item.code) %></td>
+    <td class="boq-name"><div class="boq-name-edit"><%= boq_cell_input(item, :name, item.name) %><%= link_to "⋯", edit_master_boq_boq_item_path(@master, item), class: "boq-row-menu", data: { turbo_frame: "boq_editor" }, title: "เปิดฟอร์มแก้ไข / ลบรายการ", aria: { label: "เปิดฟอร์มแก้ไข #{item.name}" } %></div></td>
+    <td class="boq-unit"><%= boq_cell_input(item, :unit, item.unit, css: "is-center") %></td>
+    <td class="boq-numeric"><%= boq_cell_input(item, :material_quantity, boq_input_number(item.material_quantity, 4), css: "is-number", number: true, step: "0.0001") %></td>
+  <% else %>
+    <td class="boq-code"><%= item.code %></td>
+    <td class="boq-name"><%= item.name %></td>
+    <td class="boq-unit"><%= item.unit %></td>
+    <td class="boq-numeric"><%= boq_qty(item.material_quantity) %></td>
+  <% end %>
+  <td class="boq-numeric boq-red"><%= boq_qty(@pending_quantities[item.id] || 0) %></td>
+  <td class="boq-numeric"><%= editable ? boq_cell_input(item, :material_unit_price, boq_input_number(item.material_unit_price, 2), css: "is-number", number: true, step: "0.01") : boq_money(item.material_unit_price) %></td>
+  <td id="<%= dom %>-material_total" class="boq-numeric boq-total"><%= boq_money(item.material_total) %></td>
+  <td class="boq-numeric boq-red"><%= boq_qty(item.material_used_qty) %></td>
+  <td id="<%= dom %>-material_remaining" class="boq-numeric <%= item.material_remaining_qty.negative? ? 'boq-red' : 'boq-positive' %>"><%= boq_qty(item.material_remaining_qty) %></td>
+  <td class="boq-numeric"><%= editable ? boq_cell_input(item, :labor_unit_price, boq_input_number(item.labor_unit_price, 2), css: "is-number", number: true, step: "0.01") : boq_money(item.labor_unit_price) %></td>
+  <td id="<%= dom %>-labor_total" class="boq-numeric boq-total"><%= boq_money(item.labor_total) %></td>
+  <td class="boq-numeric boq-red"><%= boq_money(item.labor_paid_amount) %></td>
+  <td id="<%= dom %>-labor_remaining" class="boq-numeric <%= item.labor_remaining_amount.negative? ? 'boq-red' : 'boq-positive' %>"><%= boq_money(item.labor_remaining_amount) %></td>
+  <td class="boq-pct-cell"><%= boq_progress_cell(item.completion_percentage, id: "#{dom}-progress") %></td>
+  <% if editable %>
+    <td><%= select_tag "boq_item[contractor_id]", options_for_select(contractors.map { |c| [ c.full_name, c.id ] }, item.contractor_id), include_blank: "—", id: "#{dom}-contractor_id", class: "boq-cell-input", data: { inline_field: true, original: item.contractor_id.to_s, action: "change->boq-inline#save keydown->boq-inline#key" }, aria: { label: "#{item.code} ผู้รับเหมา" } %></td>
+    <td><%= boq_cell_input(item, :note, item.note) %></td>
+  <% else %>
+    <td><%= item.contractor_name %></td><td><%= item.note %></td>
+  <% end %>
+</tr>
