@@ -1,5 +1,5 @@
 module FinanceHelper
-  STATUS_LABELS = { "draft" => "ฉบับร่าง", "pending_pu" => "รอจัดซื้อ", "pending" => "รออนุมัติ", "approved" => "อนุมัติแล้ว", "rejected" => "ปฏิเสธ" }.freeze
+  STATUS_LABELS = { "draft" => "ฉบับร่าง", "pending_pu" => "รอจัดซื้อ", "pending" => "รออนุมัติ", "approved" => "อนุมัติแล้ว", "rejected" => "ปฏิเสธ", "cancelled" => "ยกเลิก" }.freeze
   THAI_MONTHS = %w[มกราคม กุมภาพันธ์ มีนาคม เมษายน พฤษภาคม มิถุนายน กรกฎาคม สิงหาคม กันยายน ตุลาคม พฤศจิกายน ธันวาคม].freeze
 
   def workspace_params
@@ -61,6 +61,7 @@ module FinanceHelper
       %w[new create].include?(action_name) ? new_labor_draw_request_path : labor_draw_requests_path
     when "approvals" then approvals_path
     when "contractors" then contractors_path
+    when "developer_panel" then request.path
     else projects_path
     end
   end

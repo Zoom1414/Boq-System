@@ -1,0 +1,9 @@
+<% if SystemSetting.enabled?(:announcement_active) && SystemSetting.value(:announcement_message).present? %>
+  <% level = SystemSetting.value(:announcement_level) %>
+  <div class="dp-announcement is-<%= level %>" role="<%= level == 'info' ? 'status' : 'alert' %>">
+    <%= ui_icon(:bell, css: "size-4") %><span><%= SystemSetting.value(:announcement_message) %></span>
+  </div>
+<% end %>
+<% if SystemSetting.enabled?(:maintenance_mode) && (current_user&.dev? || current_user&.admin?) %>
+  <div class="dp-announcement is-danger" role="status"><%= ui_icon(:settings, css: "size-4") %><span>โหมดปิดปรับปรุงเปิดอยู่ — ผู้ใช้ทั่วไปและวิศวกรเข้าระบบไม่ได้ในขณะนี้</span></div>
+<% end %>

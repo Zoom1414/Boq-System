@@ -7,6 +7,7 @@
 @import "./usability.css";
 @import "./overview.css";
 @import "./contractors.css";
+@import "./developer.css";
 
 @theme {
   --font-sans: "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;

@@ -1,0 +1,32 @@
+<%= render "developer_panel/header", tab: :logins %>
+<div class="dp-section-head"><h3>ประวัติ Login</h3></div>
+<section class="dp-stats dp-stats-3">
+  <div class="dp-stat"><span class="dp-stat-icon is-green"><%= ui_icon(:unlock, css: "size-5") %></span><strong><%= @summary[:today] %></strong><small>Login สำเร็จวันนี้</small></div>
+  <div class="dp-stat"><span class="dp-stat-icon is-red"><%= ui_icon(:lock, css: "size-5") %></span><strong><%= @summary[:failed] %></strong><small>Login ไม่สำเร็จวันนี้</small></div>
+  <div class="dp-stat"><span class="dp-stat-icon is-blue"><%= ui_icon(:history, css: "size-5") %></span><strong><%= @summary[:week] %></strong><small>Login สำเร็จ 7 วันล่าสุด</small></div>
+</section>
+<%= form_with url: developer_logins_path, method: :get, class: "finance-card ct-filter", data: { turbo_frame: "workspace_content", turbo_action: "advance" } do |f| %>
+  <div class="ct-search"><%= ui_icon(:search, css: "size-4") %><%= f.search_field :q, value: @query, placeholder: "ค้นหาอีเมล…", aria: { label: "ค้นหาอีเมล" } %></div>
+  <div><%= f.select :result, [ [ "สำเร็จ", "success" ], [ "ไม่สำเร็จ", "failed" ] ], { selected: @result, include_blank: "ทุกผลลัพธ์" }, aria: { label: "ผลลัพธ์" } %></div>
+  <button class="btn btn-secondary">ค้นหา</button>
+<% end %>
+<section class="finance-card">
+  <% if @events.any? %>
+  <div class="finance-table-wrap"><table class="finance-table dp-table">
+    <thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>Role</th><th>ผลลัพธ์</th><th>IP</th><th>อุปกรณ์</th></tr></thead>
+    <tbody>
+      <% @events.each do |event| %>
+        <tr>
+          <td><%= dp_time(event.created_at) %></td>
+          <td><strong class="strong"><%= event.user&.name || "—" %></strong><small><%= event.email %></small></td>
+          <td><%= event.user ? render("developer_panel/role_badge", role: event.user.role) : "—" %></td>
+          <td><span class="status-pill <%= event.success ? 'status-approved' : 'status-rejected' %>"><%= event.success ? "สำเร็จ" : event.reason_label %></span></td>
+          <td><code class="dp-code"><%= event.ip_address || "—" %></code></td>
+          <td class="dp-ua" title="<%= event.user_agent %>"><%= dp_device(event.user_agent) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table></div>
+  <% else %><%= render "finance/empty", title: "ไม่พบประวัติ Login" %><% end %>
+</section>
+<p class="form-hint">แสดง 300 รายการล่าสุด · ดาวน์โหลดทั้งหมดได้จากปุ่ม Export</p>

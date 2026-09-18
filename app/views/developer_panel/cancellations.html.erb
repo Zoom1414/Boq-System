@@ -1,0 +1,45 @@
+<%= render "developer_panel/header", tab: :cancellations %>
+<div class="dp-section-head"><h3>ยกเลิกใบเบิก DV</h3></div>
+<div class="dp-warning"><%= ui_icon(:shield, css: "size-5") %><div><strong>ใช้เมื่อเอกสารผิดพลาดเท่านั้น</strong><p>ยกเลิกใบที่รออนุมัติ: ไม่มีผลกับยอด BOQ · ยกเลิกใบที่อนุมัติแล้ว: ระบบคืนยอด “ค่าแรงที่จ่าย” กลับเข้า Master BOQ · ต้องระบุเหตุผลทุกครั้งและบันทึกใน Audit Log</p></div></div>
+<nav class="filter-pills dp-pills" aria-label="สถานะ">
+  <% { "pending" => "รออนุมัติ", "approved" => "อนุมัติแล้ว", "cancelled" => "ยกเลิกแล้ว" }.each do |value, label| %>
+    <%= link_to developer_cancellations_path(status: value), class: @status == value ? "is-active" : nil, data: { turbo_frame: "workspace_content" } do %><%= label %> <span><%= @counts.fetch(value, 0) %></span><% end %>
+  <% end %>
+</nav>
+<%= form_with url: developer_cancellations_path, method: :get, class: "finance-card ct-filter", data: { turbo_frame: "workspace_content", turbo_action: "advance" } do |f| %>
+  <%= hidden_field_tag :status, @status %>
+  <div class="ct-search"><%= ui_icon(:search, css: "size-4") %><%= f.search_field :q, value: @query, placeholder: "ค้นหาเลข DV หรือชื่อช่าง…", aria: { label: "ค้นหา DV" } %></div>
+  <button class="btn btn-secondary">ค้นหา</button>
+<% end %>
+<section class="finance-card">
+  <% if @draws.any? %>
+  <div class="finance-table-wrap"><table class="finance-table dp-table">
+    <thead><tr><th>เลขที่ DV</th><th>ช่าง / ผู้รับเหมา</th><th>โครงการ / แปลน</th><th class="number">ยอดเงิน</th><th>สถานะ</th><th><%= @status == "cancelled" ? "เหตุผลการยกเลิก" : "" %></th></tr></thead>
+    <tbody>
+      <% @draws.each do |draw| %>
+        <tr>
+          <td><%= link_to draw.dv_number, labor_draw_request_path(draw), class: "document-link" %><small><%= thai_date(draw.request_date) %> · <%= draw.user.name %></small></td>
+          <td><%= draw.contractor_name %><small><%= draw.labor_draw_items.size %> รายการ</small></td>
+          <td><%= draw.project.name %><small><%= draw.house_plan.name %></small></td>
+          <td class="number strong"><%= number_with_precision(draw.total_requested_amount, precision: 2, delimiter: ",") %></td>
+          <td><%= finance_status(draw) %></td>
+          <td class="dp-row-edit">
+            <% if draw.cancelled? %>
+              <span class="dp-reason"><%= draw.cancel_reason %></span><small><%= draw.cancelled_by&.name %> · <%= dp_time(draw.cancelled_at) %></small>
+            <% else %>
+              <details class="dp-edit"><summary class="btn btn-secondary dp-danger-btn">ยกเลิกใบเบิก</summary>
+                <%= form_with url: developer_cancel_draw_path(draw), method: :patch, class: "dp-edit-form", data: { turbo_frame: "workspace_content", turbo_confirm: "ยืนยันยกเลิก #{draw.dv_number}?#{' ระบบจะคืนยอดค่าแรงเข้า BOQ' if draw.approved?}" } do %>
+                  <%= label_tag "cancel_reason_#{draw.id}", "เหตุผลการยกเลิก *" %>
+                  <%= text_area_tag :cancel_reason, nil, id: "cancel_reason_#{draw.id}", rows: 2, required: true, placeholder: "เช่น บันทึกยอดผิด / เบิกซ้ำกับ DV อื่น" %>
+                  <% if draw.approved? %><p class="form-hint">จะคืนยอด <%= baht(draw.total_requested_amount) %> เข้าค่าแรงคงเหลือของรายการ BOQ</p><% end %>
+                  <%= submit_tag "ยืนยันยกเลิก", class: "btn btn-danger dp-danger-solid" %>
+                <% end %>
+              </details>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table></div>
+  <% else %><%= render "finance/empty", title: "ไม่มีใบเบิกในสถานะนี้" %><% end %>
+</section>

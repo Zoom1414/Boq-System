@@ -1,4 +1,5 @@
 class BoqItem < ApplicationRecord
+  include Auditable
   belongs_to :boq_category
   belongs_to :contractor, optional: true
   has_one :master_boq, through: :boq_category

@@ -1,0 +1,49 @@
+<%= render "developer_panel/header", tab: :users %>
+<div class="dp-section-head"><h3>จัดการผู้ใช้ <span class="count-chip"><%= @users.size %> บัญชี</span></h3></div>
+<details class="finance-card dp-create" <%= "open" if @open_form %>>
+  <summary><span class="dp-stat-icon is-purple"><%= ui_icon(:plus, css: "size-4") %></span><strong>เพิ่มผู้ใช้ใหม่</strong><small>สร้างบัญชีและกำหนด Role โดยไม่ต้องใช้ rails console</small></summary>
+  <%= form_with model: @new_user, url: developer_users_path, method: :post, class: "dp-form", data: { turbo_frame: "workspace_content" } do |f| %>
+    <%= render "shared/form_errors", record: @new_user %>
+    <div class="dp-form-grid">
+      <div><%= f.label :name, "ชื่อที่แสดง *" %><%= f.text_field :name, required: true, placeholder: "เช่น สมชาย วิศวกร" %></div>
+      <div><%= f.label :email, "อีเมล *" %><%= f.email_field :email, required: true, placeholder: "name@company.com", autocomplete: "off" %></div>
+      <div><%= f.label :role, "Role *" %><%= f.select :role, DeveloperPanelController::ROLES.map { |r| [ "#{User::ROLE_LABELS[r]} (#{r})", r ] } %></div>
+      <div><%= f.label :password, "รหัสผ่าน * (อย่างน้อย 12 ตัว)" %><%= f.password_field :password, required: true, minlength: 12, autocomplete: "new-password" %></div>
+    </div>
+    <div class="dp-form-actions"><%= f.submit "สร้างบัญชี", class: "btn btn-primary", data: { turbo_submits_with: "กำลังสร้าง…" } %></div>
+  <% end %>
+</details>
+<%= form_with url: developer_users_path, method: :get, class: "finance-card ct-filter", data: { turbo_frame: "workspace_content", turbo_action: "advance" } do |f| %>
+  <div class="ct-search"><%= ui_icon(:search, css: "size-4") %><%= f.search_field :q, value: @query, placeholder: "ค้นหาชื่อหรืออีเมล…", aria: { label: "ค้นหาผู้ใช้" } %></div>
+  <div><%= f.select :role, DeveloperPanelController::ROLES.map { |r| [ User::ROLE_LABELS[r], r ] }, { selected: params[:role], include_blank: "ทุก Role" }, aria: { label: "Role" } %></div>
+  <button class="btn btn-secondary">ค้นหา</button>
+<% end %>
+<section class="finance-card">
+  <div class="finance-table-wrap"><table class="finance-table dp-table">
+    <thead><tr><th>ผู้ใช้</th><th>Role</th><th>สถานะ</th><th>Login ล่าสุด</th><th>สร้างเมื่อ</th><th></th></tr></thead>
+    <tbody>
+      <% @users.each do |user| %>
+        <tr class="<%= 'is-inactive' unless user.active? %>">
+          <td><div class="ct-person"><span class="ct-avatar dp-avatar"><%= user.name.first %></span><span><strong><%= user.name %><%= " (คุณ)" if user == current_user %></strong><small><%= user.email %></small></span></div></td>
+          <td><%= render "developer_panel/role_badge", role: user.role %></td>
+          <td><span class="status-pill <%= user.active? ? 'status-approved' : 'status-cancelled' %>"><%= user.active? ? "ใช้งานได้" : "ปิดใช้งาน" %></span></td>
+          <td><%= @last_logins[user.id] ? dp_time(@last_logins[user.id]) : "—" %></td>
+          <td><%= thai_date(user.created_at.to_date) %></td>
+          <td class="dp-row-edit">
+            <details class="dp-edit"><summary class="btn btn-secondary">แก้ไข</summary>
+              <%= form_with model: user, url: developer_user_path(user), method: :patch, class: "dp-edit-form", data: { turbo_frame: "workspace_content" } do |f| %>
+                <%= f.label :name, "ชื่อ" %><%= f.text_field :name, id: "user_#{user.id}_name" %>
+                <%= f.label :email, "อีเมล" %><%= f.email_field :email, id: "user_#{user.id}_email" %>
+                <%= f.label :role, "Role" %><%= f.select :role, DeveloperPanelController::ROLES.map { |r| [ "#{User::ROLE_LABELS[r]} (#{r})", r ] }, {}, id: "user_#{user.id}_role", disabled: user == current_user %>
+                <%= f.label :password, "ตั้งรหัสผ่านใหม่ (เว้นว่าง = ไม่เปลี่ยน)" %><%= f.password_field :password, id: "user_#{user.id}_password", minlength: 12, autocomplete: "new-password" %>
+                <% unless user == current_user %><label class="check-label"><%= f.hidden_field :active, value: "0", id: nil %><%= f.check_box :active, { id: "user_#{user.id}_active" }, "1", nil %> บัญชีใช้งานได้</label><% else %><p class="form-hint">บัญชีของคุณ: เปลี่ยน Role หรือปิดใช้งานตัวเองไม่ได้</p><% end %>
+                <%= f.submit "บันทึก", class: "btn btn-primary" %>
+              <% end %>
+            </details>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table></div>
+</section>
+<p class="form-hint">ผู้ใช้ที่เคยทำเอกสารลบไม่ได้เพื่อเก็บประวัติ ให้ปิดใช้งานแทน · บัญชีที่ปิดใช้งานจะเข้าสู่ระบบไม่ได้ทันที</p>

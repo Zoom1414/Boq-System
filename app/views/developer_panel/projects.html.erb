@@ -1,0 +1,23 @@
+<%= render "developer_panel/header", tab: :projects %>
+<div class="dp-section-head"><h3>จัดการโครงการ <span class="count-chip"><%= @rows.size %> โครงการ</span></h3><%= link_to new_project_path, class: "btn btn-primary" do %><%= ui_icon(:plus, css: "size-4") %> สร้างโครงการ<% end %></div>
+<section class="finance-card">
+  <% if @rows.any? %>
+  <div class="finance-table-wrap"><table class="finance-table dp-table">
+    <thead><tr><th>โครงการ</th><th>สถานะ</th><th class="number">แปลน</th><th class="number">งบประมาณ</th><th>ใช้งบไป</th><th class="number">รออนุมัติ</th><th></th></tr></thead>
+    <tbody>
+      <% @rows.each do |row| %>
+        <% project = row[:project] %>
+        <tr>
+          <td><strong class="strong"><%= project.name %></strong><small><%= project.code %><%= " · #{project.location}" if project.location.present? %></small></td>
+          <td><%= project_status_badge(project) %></td>
+          <td class="number"><%= project.house_plans.size %></td>
+          <td class="number strong"><%= number_with_precision(row[:budget], precision: 2, delimiter: ",") %></td>
+          <td><div class="ov-plan-bar <%= 'is-over' if row[:used] > 100 %>"><span style="width:<%= [ row[:used], 100 ].min %>%"></span></div><small><%= number_with_precision(row[:spent], precision: 2, delimiter: ",") %> · <%= row[:used] %>%</small></td>
+          <td class="number"><%= row[:pending].positive? ? tag.span("#{row[:pending]} เอกสาร", class: "amber-text") : "—" %></td>
+          <td class="dp-row-edit"><%= link_to "ภาพรวม", dashboard_path(project_id: project.id), class: "btn btn-secondary", data: { turbo_frame: "workspace_content" } %> <%= link_to "แก้ไข", edit_project_path(project), class: "ov-link" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table></div>
+  <% else %><%= render "finance/empty", title: "ยังไม่มีโครงการ" %><% end %>
+</section>

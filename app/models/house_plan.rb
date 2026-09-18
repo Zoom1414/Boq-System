@@ -1,4 +1,5 @@
 class HousePlan < ApplicationRecord
+  include Auditable
   belongs_to :project
   has_one :master_boq, dependent: :restrict_with_error
   has_many :purchase_orders, dependent: :restrict_with_error

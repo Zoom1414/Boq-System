@@ -10,9 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_18_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "audit_logs", force: :cascade do |t|
+    t.string "action", null: false
+    t.bigint "auditable_id"
+    t.string "auditable_type"
+    t.datetime "created_at", null: false
+    t.jsonb "details", default: {}, null: false
+    t.text "summary", null: false
+    t.bigint "user_id"
+    t.index ["action"], name: "index_audit_logs_on_action"
+    t.index ["auditable_type", "auditable_id"], name: "index_audit_logs_on_auditable_type_and_auditable_id"
+    t.index ["created_at"], name: "index_audit_logs_on_created_at"
+    t.index ["user_id"], name: "index_audit_logs_on_user_id"
+  end
 
   create_table "boq_categories", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -110,6 +124,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
     t.datetime "approved_at"
     t.bigint "approved_by_id"
     t.boolean "budget_override", default: false, null: false
+    t.text "cancel_reason"
+    t.datetime "cancelled_at"
+    t.bigint "cancelled_by_id"
     t.bigint "contractor_id"
     t.string "contractor_name", null: false
     t.datetime "created_at", null: false
@@ -128,6 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["approved_by_id"], name: "index_labor_draw_requests_on_approved_by_id"
+    t.index ["cancelled_by_id"], name: "index_labor_draw_requests_on_cancelled_by_id"
     t.index ["contractor_id"], name: "index_labor_draw_requests_on_contractor_id"
     t.index ["dv_number"], name: "index_labor_draw_requests_on_dv_number", unique: true
     t.index ["house_plan_id"], name: "index_labor_draw_requests_on_house_plan_id"
@@ -136,7 +154,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
     t.index ["submission_key"], name: "index_labor_draw_requests_on_submission_key", unique: true
     t.index ["user_id"], name: "index_labor_draw_requests_on_user_id"
     t.check_constraint "status::text <> 'approved'::text OR approved_by_id IS NOT NULL AND approved_at IS NOT NULL", name: "labor_draw_requests_approval_audit"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying]::text[])", name: "labor_draw_requests_valid_status"
+    t.check_constraint "status::text <> 'cancelled'::text OR cancelled_by_id IS NOT NULL AND cancelled_at IS NOT NULL", name: "labor_draw_requests_cancel_audit"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying, 'cancelled'::character varying]::text[])", name: "labor_draw_requests_valid_status"
+  end
+
+  create_table "login_events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.string "ip_address"
+    t.string "reason"
+    t.boolean "success", default: false, null: false
+    t.string "user_agent"
+    t.bigint "user_id"
+    t.index ["created_at"], name: "index_login_events_on_created_at"
+    t.index ["user_id"], name: "index_login_events_on_user_id"
   end
 
   create_table "master_boqs", force: :cascade do |t|
@@ -210,7 +241,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
     t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'pending_pu'::character varying, 'approved'::character varying, 'rejected'::character varying]::text[])", name: "purchase_orders_valid_status"
   end
 
+  create_table "system_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "key", null: false
+    t.datetime "updated_at", null: false
+    t.text "value"
+    t.index ["key"], name: "index_system_settings_on_key", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -225,6 +265,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
     t.check_constraint "role::text = ANY (ARRAY['dev'::character varying, 'admin'::character varying, 'project_engineer'::character varying, 'user'::character varying]::text[])", name: "users_valid_role"
   end
 
+  add_foreign_key "audit_logs", "users"
   add_foreign_key "boq_categories", "master_boqs"
   add_foreign_key "boq_items", "boq_categories"
   add_foreign_key "boq_items", "contractors"
@@ -236,6 +277,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
   add_foreign_key "labor_draw_requests", "projects"
   add_foreign_key "labor_draw_requests", "users"
   add_foreign_key "labor_draw_requests", "users", column: "approved_by_id"
+  add_foreign_key "labor_draw_requests", "users", column: "cancelled_by_id"
+  add_foreign_key "login_events", "users"
   add_foreign_key "master_boqs", "house_plans"
   add_foreign_key "po_items", "boq_items"
   add_foreign_key "po_items", "purchase_orders"

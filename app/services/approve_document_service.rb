@@ -1,6 +1,7 @@
 class ApproveDocumentService
   class InvalidState < StandardError; end
   class OverrideReasonRequired < StandardError; end
+  class OverrideDisabled < OverrideReasonRequired; end
   class BudgetExceeded < StandardError
     attr_reader :warnings
 
@@ -37,6 +38,9 @@ class ApproveDocumentService
       document.validate!
       warnings = BudgetCheckService.new(document, boq_items: items).warnings
       raise BudgetExceeded, warnings if warnings.any? && !@override
+      if warnings.any? && @override && !SystemSetting.enabled?(:allow_budget_override)
+        raise OverrideDisabled, "ระบบปิดการอนุมัติเกินงบไว้ กรุณาปรับยอดให้อยู่ในงบ (ตั้งค่าโดย Developer)"
+      end
       if @override
         Pundit.authorize(actor, document, :override_budget?)
         raise OverrideReasonRequired, "An Admin override reason is required" if @override_reason.blank?

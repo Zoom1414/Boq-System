@@ -26,7 +26,7 @@
   <% end %>
   <% if @items.any? && @draw.contractor&.bank_ready? %>
     <%= form_with model: @draw, url: labor_draw_requests_path, method: :post, class: "finance-card labor-form",
-      data: { controller: "labor-form", labor_form_admin_value: current_user.admin?, action: "input->labor-form#calculate", turbo_frame: "_top" } do |f| %>
+      data: { controller: "labor-form", labor_form_admin_value: current_user.admin? && SystemSetting.enabled?(:admin_instant_labor_approval), action: "input->labor-form#calculate", turbo_frame: "_top" } do |f| %>
       <% if @error %><div class="alert" role="alert"><%= @error %></div><% end %>
       <%= render "shared/form_errors", record: @draw %>
       <%= f.hidden_field :project_id, value: @nav_project&.id %><%= f.hidden_field :house_plan_id, value: @nav_plan&.id %>
@@ -35,7 +35,7 @@
         <div><h3>2. ใส่ยอดเบิกของ <%= @draw.contractor&.full_name %></h3></div>
         <div class="labor-date"><%= f.label :request_date, "วันที่เบิก" %><%= f.date_field :request_date, required: true %></div>
       </div>
-      <% if current_user.admin? %><div class="role-notice"><%= ui_icon(:check, css: "size-4") %><span><strong>Admin เบิกได้ทันที</strong> เมื่อบันทึก ระบบอนุมัติและหักยอด BOQ ให้ในครั้งเดียว</span></div><% end %>
+      <% if current_user.admin? && SystemSetting.enabled?(:admin_instant_labor_approval) %><div class="role-notice"><%= ui_icon(:check, css: "size-4") %><span><strong>Admin เบิกได้ทันที</strong> เมื่อบันทึก ระบบอนุมัติและหักยอด BOQ ให้ในครั้งเดียว</span></div><% end %>
       <div class="labor-tools"><label class="sr-only" for="labor-search">ค้นหารายการงาน</label><input id="labor-search" type="search" placeholder="ค้นหาชื่องานหรือรหัส…" data-labor-form-target="search" data-action="input->labor-form#filter"><span>ทั้งหมด <%= @items.size %> งาน</span></div>
       <div class="labor-entry-head" aria-hidden="true"><span>รายการงาน</span><span>เบิกได้คงเหลือ</span><span>เบิกครั้งนี้ (บาท)</span><span>เหลือหลังเบิก</span></div>
       <div class="labor-entries">
@@ -58,7 +58,7 @@
       </div>
       <p class="labor-no-matches" data-labor-form-target="noMatches" hidden>ไม่พบงานที่ค้นหา ลองใช้ชื่อหรือรหัสอื่น</p>
       <div class="labor-budget-warning" data-labor-form-target="warning" role="status" hidden>
-        <% if current_user.admin? %>
+        <% if current_user.admin? && SystemSetting.enabled?(:admin_instant_labor_approval) && SystemSetting.enabled?(:allow_budget_override) %>
           <strong>ยอดเบิกบางรายการเกินงบคงเหลือ</strong><p>ปรับยอดเงิน หรือยืนยันอนุมัติเกินงบพร้อมเหตุผล</p>
           <label class="check-label"><%= check_box_tag :budget_override, "1", params[:budget_override] == "1", data: { labor_form_target: "override" } %> อนุมัติยอดส่วนที่เกินงบ</label>
           <%= label_tag :override_reason, "เหตุผลที่เบิกเกินงบ" %><%= text_field_tag :override_reason, params[:override_reason], placeholder: "เช่น มีงานเพิ่มเติมที่ตรวจรับแล้ว", data: { labor_form_target: "reason" } %>

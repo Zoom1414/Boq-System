@@ -1,0 +1,27 @@
+<%= render "developer_panel/header", tab: :permissions %>
+<div class="dp-section-head"><h3>สิทธิ์การเข้าถึงตาม Role</h3><%= link_to "ปรับสิทธิ์ที่ตั้งค่าได้ →", developer_approvals_path, class: "ov-link", data: { turbo_frame: "workspace_content" } %></div>
+<section class="dp-role-cards">
+  <% DeveloperPanelController::ROLES.each do |role| %>
+    <div class="dp-role-card"><%= render "developer_panel/role_badge", role: role %><strong><%= User::ROLE_LABELS[role] %></strong><small><%= @role_counts.fetch(role, 0) %> บัญชี</small></div>
+  <% end %>
+</section>
+<section class="finance-card">
+  <div class="finance-table-wrap"><table class="finance-table dp-matrix">
+    <thead><tr><th>สิทธิ์</th><% DeveloperPanelController::ROLES.each do |role| %><th class="is-center"><%= render "developer_panel/role_badge", role: role %></th><% end %></tr></thead>
+    <tbody>
+      <% DeveloperPanelController::PERMISSIONS.each do |label, grants| %>
+        <tr><td class="strong"><%= label %></td>
+          <% DeveloperPanelController::ROLES.each do |role| %>
+            <% grant = grants[role] %>
+            <td class="is-center">
+              <% if grant == :yes %><span class="dp-yes" aria-label="ได้"><%= ui_icon(:check, css: "size-4") %></span>
+              <% elsif grant == :no %><span class="dp-no" aria-label="ไม่ได้">—</span>
+              <% else %><span class="dp-setting <%= SystemSetting.enabled?(grant) ? 'is-on' : 'is-off' %>" title="<%= SystemSetting::LABELS[grant.to_s] %>"><%= SystemSetting.enabled?(grant) ? "เปิด" : "ปิด" %></span><% end %>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table></div>
+</section>
+<p class="form-hint">✓ = มีสิทธิ์ · เปิด/ปิด = ขึ้นกับการตั้งค่าในแท็บ “ตั้งค่าอนุมัติ” · สิทธิ์นี้บังคับใช้จริงจาก Policy ของระบบ</p>

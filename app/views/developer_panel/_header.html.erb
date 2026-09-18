@@ -1,0 +1,29 @@
+<% tabs = [
+  [ :overview, "ภาพรวม", developer_path, :grid ], [ :users, "จัดการผู้ใช้", developer_users_path, :users ],
+  [ :projects, "จัดการโครงการ", developer_projects_path, :folder ], [ :logins, "ประวัติ Login", developer_logins_path, :history ],
+  [ :audit, "Audit Log", developer_audit_path, :clipboard ], [ :permissions, "สิทธิ์การเข้าถึง", developer_permissions_path, :shield ],
+  [ :approvals, "ตั้งค่าอนุมัติ", developer_approvals_path, :check ], [ :cancellations, "ยกเลิกใบเบิก DV", developer_cancellations_path, :x ],
+  [ :notifications, "การแจ้งเตือน", developer_notifications_path, :bell ], [ :system, "ควบคุมระบบ", developer_system_path, :settings ]
+] %>
+<% pending = @pending_pu + @pending_dv %>
+<div class="dp-head">
+  <div class="dp-title"><span class="dp-logo"><%= ui_icon(:code, css: "size-6") %></span><div><h2>Developer Panel</h2><p>จัดการระบบ ผู้ใช้ และโครงการ</p></div></div>
+  <div class="dp-head-actions">
+    <details class="dp-menu"><summary class="btn btn-secondary"><%= ui_icon(:download, css: "size-4") %> Export</summary>
+      <div><%= link_to "ผู้ใช้ทั้งหมด (.csv)", developer_export_path("users"), data: { turbo: false } %><%= link_to "ประวัติ Login (.csv)", developer_export_path("logins"), data: { turbo: false } %><%= link_to "Audit Log (.csv)", developer_export_path("audit"), data: { turbo: false } %></div>
+    </details>
+    <details class="dp-menu dp-bell"><summary class="btn btn-secondary" aria-label="การแจ้งเตือน <%= pending %> รายการ"><%= ui_icon(:bell, css: "size-4") %><% if pending.positive? %><em><%= pending %></em><% end %></summary>
+      <div>
+        <strong>รายการรอดำเนินการ</strong>
+        <span>รอจัดซื้อ (PU) <b><%= @pending_pu %></b></span>
+        <span>ใบเบิก DV รออนุมัติ <b><%= @pending_dv %></b></span>
+        <%= link_to "ดูรายการที่ DV รออนุมัติ →", developer_cancellations_path(status: "pending") %>
+      </div>
+    </details>
+  </div>
+</div>
+<nav class="dp-tabs" aria-label="เมนู Developer Panel">
+  <% tabs.each do |key, label, path, icon| %>
+    <%= link_to path, class: "dp-tab #{'is-active' if key == tab}", aria: { current: key == tab ? "page" : nil }, data: { turbo_frame: "workspace_content" } do %><%= ui_icon(icon, css: "size-4") %><span><%= label %></span><% end %>
+  <% end %>
+</nav>

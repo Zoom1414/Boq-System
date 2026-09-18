@@ -1,4 +1,5 @@
 class BoqCategory < ApplicationRecord
+  include Auditable
   belongs_to :master_boq
   has_many :boq_items, dependent: :restrict_with_error
 

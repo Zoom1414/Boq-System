@@ -1,4 +1,5 @@
 class LaborDrawRequest < ApplicationRecord
+  include Auditable
   include FinancialDocument
 
   belongs_to :user
@@ -6,7 +7,8 @@ class LaborDrawRequest < ApplicationRecord
   has_many :labor_draw_items, inverse_of: :labor_draw_request, dependent: :destroy
   accepts_nested_attributes_for :labor_draw_items, allow_destroy: true
 
-  enum :status, { pending: "pending", approved: "approved", rejected: "rejected" }, validate: true
+  belongs_to :cancelled_by, class_name: "User", optional: true
+  enum :status, { pending: "pending", approved: "approved", rejected: "rejected", cancelled: "cancelled" }, validate: true
 
   validates :dv_number, :contractor_name, :request_date, presence: true
   validates :dv_number, uniqueness: true

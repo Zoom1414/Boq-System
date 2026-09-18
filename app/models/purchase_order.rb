@@ -1,4 +1,5 @@
 class PurchaseOrder < ApplicationRecord
+  include Auditable
   include FinancialDocument
 
   has_many :po_items, inverse_of: :purchase_order, dependent: :destroy
